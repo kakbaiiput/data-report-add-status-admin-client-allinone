@@ -1393,12 +1393,14 @@
                 const diff = Math.round((due - today) / 86400000);
 
                 const isUnpaid = status !== 'lunas' && status !== 'terbayarkan';
+                // Status "ready" tidak perlu diingatkan via WhatsApp
+                const needsReminder = isUnpaid && status !== 'ready';
 
                 if (status === 'pending') categories.observasi.push(row);
-                if (diff === 0 && isUnpaid) categories.warningReminder.push(row);
-                if (diff === 1 && isUnpaid) categories.reminderH1.push(row);
-                if (diff === 2 && isUnpaid) categories.reminderH2.push(row);
-                if (diff === 3 && isUnpaid) categories.reminderH3.push(row);
+                if (diff === 0 && needsReminder) categories.warningReminder.push(row);
+                if (diff === 1 && needsReminder) categories.reminderH1.push(row);
+                if (diff === 2 && needsReminder) categories.reminderH2.push(row);
+                if (diff === 3 && needsReminder) categories.reminderH3.push(row);
                 if (diff < 0 && diff >= -1 && isUnpaid) categories.proses.push(row);
                 if (diff < -1 && isUnpaid) categories.jatuhTempo.push(row);
                 if ((status === 'ready' || status === 'planned') && diff < 0) categories.segera.push(row);
