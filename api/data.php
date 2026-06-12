@@ -5,6 +5,7 @@
  * GET ?sheet=client-aktif          → data satu sheet
  * GET ?sheet=semua-client          → gabungan semua sheet
  * GET ?sheet=client-aktif&ts=1     → hanya kembalikan timestamp sync terakhir
+ * GET ?action=validate&kit=OUTD-x  → validasi KIT/SN untuk form report
  *
  * Wajib header: X-Api-Key: <API_KEY dari db.php>
  */
@@ -13,8 +14,8 @@ require_once __DIR__ . '/db.php';
 
 // ── CORS: hanya izinkan origin yang dikenal ──────────────────────────────────
 $allowed_origins = [
-    'https://starlink.octolink.id',  // same-server, tapi tetap izinkan
-    'https://client.octolink.id',    // subdomain client butuh CORS
+    'https://starlink.octolink.id',
+    'https://client.octolink.id',
 ];
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 if (in_array($origin, $allowed_origins, true)) {
@@ -36,6 +37,124 @@ $apiKey = $_SERVER['HTTP_X_API_KEY'] ?? '';
 if ($apiKey !== API_KEY) {
     http_response_code(401);
     echo json_encode(['status' => 'error', 'message' => 'Unauthorized']);
+    exit;
+}
+
+$action = $_GET['action'] ?? '';
+
+// ── Validasi KIT/SN untuk form report ────────────────────────────────────────
+if ($action === 'validate') {
+    $kit = trim($_GET['kit'] ?? '');
+    if ($kit === '') {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'Parameter kit diperlukan']);
+        exit;
+    }
+
+    $kitUpper = strtoupper($kit);
+
+    $sheetDisplayNames = [
+        'client-aktif'     => 'Client Aktif',
+        'client-non-aktif' => 'Client Non Aktif',
+        'client-lepas'     => 'Client Lepas',
+    ];
+
+    try {
+        $pdo = getDB();
+
+        $stmt = $pdo->prepare("
+            SELECT * FROM clients
+            WHERE sheet_name IN ('client-aktif', 'client-non-aktif', 'client-lepas')
+              AND (col_i LIKE :pat OR col_j LIKE :pat)
+            ORDER BY FIELD(sheet_name, 'client-aktif', 'client-non-aktif', 'client-lepas'), row_index
+        ");
+        $stmt->execute([':pat' => '%' . $kit . '%']);
+        $rows = $stmt->fetchAll();
+
+        $found   = null;
+        $foundBy = null;
+
+        foreach ($rows as $row) {
+            $kitNums = array_map('trim', explode("\n", $row['col_i'] ?? ''));
+            foreach ($kitNums as $kn) {
+                if (strtoupper($kn) === $kitUpper) {
+                    $found   = $row;
+                    $foundBy = 'KIT Number';
+                    break 2;
+                }
+            }
+            $serials = array_map('trim', explode("\n", $row['col_j'] ?? ''));
+            foreach ($serials as $sn) {
+                if (strtoupper($sn) === $kitUpper) {
+                    $found   = $row;
+                    $foundBy = 'Serial Number';
+                    break 2;
+                }
+            }
+        }
+
+        if (!$found) {
+            echo json_encode([
+                'validation' => [
+                    'status'       => 'not_found',
+                    'clientStatus' => null,
+                    'isActive'     => false,
+                    'data'         => null,
+                    'warning'      => '❌ KIT/Serial Number tidak ditemukan dalam database!',
+                ],
+                'duplicate' => ['hasDuplicate' => false, 'duplicateKits' => []],
+            ]);
+            exit;
+        }
+
+        $kitNums = array_values(array_filter(array_map('trim', explode("\n", $found['col_i'] ?? ''))));
+        $serials = array_values(array_map('trim', explode("\n", $found['col_j'] ?? '')));
+        $pakets  = array_values(array_map('trim', explode("\n", $found['col_p'] ?? '')));
+
+        $allKits = [];
+        foreach ($kitNums as $k => $kn) {
+            if ($kn === '') continue;
+            $sn    = $serials[$k] ?? ($serials[0] ?? '');
+            $paket = $pakets[$k]  ?? ($pakets[0]  ?? '');
+            $isMatched = $foundBy === 'KIT Number'
+                ? strtoupper($kn) === $kitUpper
+                : strtoupper($sn) === $kitUpper;
+            $allKits[] = [
+                'kitNumber'    => $kn,
+                'serialNumber' => $sn,
+                'paket'        => $paket,
+                'isSelected'   => $isMatched,
+            ];
+        }
+
+        $sheetName   = $found['sheet_name'];
+        $displayName = $sheetDisplayNames[$sheetName] ?? $sheetName;
+        $isActive    = $sheetName === 'client-aktif';
+
+        echo json_encode([
+            'validation' => [
+                'status'       => 'found',
+                'clientStatus' => $displayName,
+                'isActive'     => $isActive,
+                'foundBy'      => $foundBy,
+                'data'         => [
+                    'nama'      => trim($found['col_a'] ?? ''),
+                    'rowNumber' => (int)$found['row_index'] + 1,
+                    'sheetName' => $displayName,
+                    'allKits'   => $allKits,
+                    'totalKits' => count($allKits),
+                ],
+                'warning' => !$isActive
+                    ? "⚠️ PERHATIAN: Client tidak berada di 'Client Aktif'. Segera update data!"
+                    : null,
+            ],
+            'duplicate' => ['hasDuplicate' => false, 'duplicateKits' => []],
+        ]);
+
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['status' => 'error', 'message' => 'Server error']);
+    }
     exit;
 }
 
