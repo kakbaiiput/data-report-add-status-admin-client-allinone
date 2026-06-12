@@ -4,6 +4,9 @@ const CONFIG = {
 
     VPS_API_URL: 'https://data.octolink.id/api/data.php',
 
+    // API key untuk request ke VPS — harus sama dengan API_KEY di api/db.php
+    API_KEY: 'sk-octolink-x9f2mK7pQr4nZvBw',
+
     API_TIMEOUT: 35000,
 
     RETRY_ATTEMPTS: 2,
@@ -13,8 +16,6 @@ const CONFIG = {
     FORCE_MOBILE_LAYOUT: false,
 
     DEBUG_MODE: false,
-
-
 
     getApiUrl(type) { return this.API_URL; },
 
@@ -27,3 +28,19 @@ const CONFIG = {
     error(...args) { console.error('[STARLINK ERROR]', ...args); }
 
 };
+
+// ── Auto-inject X-Api-Key ke semua fetch yang menuju VPS API ─────────────────
+// Dengan ini semua file tidak perlu diubah satu per satu
+(function () {
+    const _fetch = window.fetch.bind(window);
+    window.fetch = function (input, init) {
+        const url = (typeof input === 'string') ? input : (input.url || '');
+        if (url.includes('data.octolink.id')) {
+            init = init || {};
+            init.headers = Object.assign({}, init.headers, {
+                'X-Api-Key': CONFIG.API_KEY
+            });
+        }
+        return _fetch(input, init);
+    };
+})();

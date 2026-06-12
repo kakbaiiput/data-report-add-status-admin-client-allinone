@@ -1,18 +1,46 @@
 <?php
 /**
- * data.php — Melayani request data dari data.html.
+ * data.php — Melayani request data dari frontend.
  *
  * GET ?sheet=client-aktif          → data satu sheet
  * GET ?sheet=semua-client          → gabungan semua sheet
  * GET ?sheet=client-aktif&ts=1     → hanya kembalikan timestamp sync terakhir
+ *
+ * Wajib header: X-Api-Key: <API_KEY dari db.php>
  */
-
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *'); // izinkan akses dari domain manapun (batasi jika perlu)
 
 require_once __DIR__ . '/db.php';
 
-$sheet = $_GET['sheet'] ?? 'client-aktif';
+// ── CORS: hanya izinkan origin yang dikenal ──────────────────────────────────
+$allowed_origins = [
+    'https://starlink.octolink.id',
+    'https://client.octolink.id',
+];
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if (in_array($origin, $allowed_origins, true)) {
+    header('Access-Control-Allow-Origin: ' . $origin);
+    header('Vary: Origin');
+}
+header('Access-Control-Allow-Methods: GET, OPTIONS');
+header('Access-Control-Allow-Headers: X-Api-Key, Content-Type');
+header('Content-Type: application/json');
+
+// ── Handle preflight OPTIONS ─────────────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(204);
+    exit;
+}
+
+// ── Validasi API Key ─────────────────────────────────────────────────────────
+$apiKey = $_SERVER['HTTP_X_API_KEY'] ?? '';
+if ($apiKey !== API_KEY) {
+    http_response_code(401);
+    echo json_encode(['status' => 'error', 'message' => 'Unauthorized']);
+    exit;
+}
+
+// ── Parameter ────────────────────────────────────────────────────────────────
+$sheet  = $_GET['sheet'] ?? 'client-aktif';
 $tsOnly = isset($_GET['ts']);
 
 $validSheets = ['client-aktif', 'client-non-aktif', 'client-lepas', 'client-tertagih', 'akun-kosong', 'semua-client'];
@@ -25,7 +53,7 @@ if (!in_array($sheet, $validSheets, true)) {
 try {
     $pdo = getDB();
 
-    // ── Hanya kembalikan waktu sync terakhir ────────────────────────────────
+    // ── Hanya kembalikan waktu sync terakhir ─────────────────────────────────
     if ($tsOnly) {
         if ($sheet === 'semua-client') {
             $stmt = $pdo->query('SELECT MAX(synced_at) AS ts FROM clients');
@@ -38,7 +66,7 @@ try {
         exit;
     }
 
-    // ── Ambil data ──────────────────────────────────────────────────────────
+    // ── Ambil data ───────────────────────────────────────────────────────────
     $colMap = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X'];
 
     if ($sheet === 'semua-client') {
@@ -63,7 +91,6 @@ try {
             $dbCol = 'col_' . strtolower($col);
             $row[$col] = $dbRow[$dbCol] ?? '';
         }
-        // Tambahkan _category untuk sheet semua-client (dibutuhkan data.html)
         if ($sheet === 'semua-client') {
             $row['_category'] = $categoryMap[$dbRow['sheet_name']] ?? '';
         }
@@ -79,5 +106,5 @@ try {
 
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    echo json_encode(['status' => 'error', 'message' => 'Server error']);
 }

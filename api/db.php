@@ -6,6 +6,7 @@ define('DB_NAME', 'dataclientstarlink');       // nama database
 define('DB_USER', 'dataclientstarlink');     // username database
 define('DB_PASS', 'dataclientstarlink');    // password database
 define('SYNC_SECRET', 'dataclientstarlink'); // kunci rahasia untuk endpoint sync
+define('API_KEY', 'sk-octolink-' . 'x9f2mK7pQr4nZvBw'); // API key untuk data.php — ganti jika perlu
 
 function getDB() {
     static $pdo = null;

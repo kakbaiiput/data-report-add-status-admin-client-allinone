@@ -1,5 +1,5 @@
 // ⚡ VPS MySQL validate endpoint (much faster than GAS JSONP)
-const VPS_VALIDATE_URL = 'https://report.octolink.id/api/data.php';
+const VPS_VALIDATE_URL = (typeof CONFIG !== 'undefined') ? CONFIG.VPS_API_URL : 'https://data.octolink.id/api/data.php';
 
 // 📅 INDONESIAN DATE FORMATTER
 function formatDateIndonesian(dateString) {
