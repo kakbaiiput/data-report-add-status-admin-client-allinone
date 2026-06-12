@@ -2,7 +2,7 @@ const CONFIG = {
 
     API_URL: 'https://script.google.com/macros/s/AKfycbwE9TamMNcJgqTBCXgcZqS40jmxK_nA4sFWiKu3cZpdgwcluVWQovxnXD3LnNhz6UZ9/exec',
 
-    VPS_API_URL: 'https://starlink.octolink.id/api/data.php',
+    VPS_API_URL: 'https://admin.octolink.id/api/data.php',
 
     // API key untuk request ke VPS — harus sama dengan API_KEY di api/db.php
     API_KEY: 'sk-octolink-x9f2mK7pQr4nZvBw',

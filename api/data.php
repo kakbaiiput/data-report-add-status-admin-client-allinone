@@ -14,6 +14,7 @@ require_once __DIR__ . '/db.php';
 
 // ── CORS: hanya izinkan origin yang dikenal ──────────────────────────────────
 $allowed_origins = [
+    'https://admin.octolink.id',
     'https://starlink.octolink.id',
     'https://client.octolink.id',
 ];
