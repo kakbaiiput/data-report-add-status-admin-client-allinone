@@ -324,6 +324,119 @@ $tokens = $_SESSION['page_tokens'];
             background: #22c55e; box-shadow: 0 0 6px #22c55e;
         }
 
+        /* ── PIN Modal ── */
+        .pin-overlay {
+            position: fixed; inset: 0; z-index: 9998;
+            background: rgba(6,10,20,0.97);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .pin-overlay.hidden { display: none; }
+
+        .pin-box {
+            width: 100%; max-width: 340px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px;
+            padding: 36px 32px 32px;
+            text-align: center;
+            box-shadow:
+                0 0 0 1px rgba(59,130,246,0.1),
+                0 32px 80px rgba(0,0,0,0.6),
+                inset 0 1px 0 rgba(255,255,255,0.06);
+            animation: pinBoxIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+        }
+        @keyframes pinBoxIn {
+            from { opacity: 0; transform: scale(0.88) translateY(20px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .pin-icon {
+            width: 56px; height: 56px; margin: 0 auto 16px;
+            background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(139,92,246,0.2));
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px;
+            box-shadow: 0 0 24px rgba(59,130,246,0.2);
+        }
+
+        .pin-title {
+            font-size: 1.1rem; font-weight: 700; color: #f1f5f9;
+            letter-spacing: -0.02em; margin-bottom: 4px;
+        }
+        .pin-sub {
+            font-size: 0.75rem; color: #475569; margin-bottom: 28px;
+            line-height: 1.5;
+        }
+
+        /* Dots indicator */
+        .pin-dots {
+            display: flex; justify-content: center; gap: 12px;
+            margin-bottom: 28px;
+        }
+        .pin-dot {
+            width: 14px; height: 14px; border-radius: 50%;
+            border: 2px solid #334155;
+            background: transparent;
+            transition: all 0.15s ease;
+        }
+        .pin-dot.filled {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            box-shadow: 0 0 10px rgba(59,130,246,0.6);
+            transform: scale(1.15);
+        }
+        .pin-dot.error {
+            background: #ef4444; border-color: #ef4444;
+            box-shadow: 0 0 10px rgba(239,68,68,0.6);
+            animation: dotShake 0.35s ease;
+        }
+        @keyframes dotShake {
+            0%,100% { transform: translateX(0); }
+            20%      { transform: translateX(-5px); }
+            60%      { transform: translateX(5px); }
+        }
+
+        /* Numpad */
+        .pin-numpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .pin-key {
+            height: 54px; border-radius: 13px;
+            border: 1px solid rgba(255,255,255,0.07);
+            background: rgba(255,255,255,0.04);
+            color: #e2e8f0; font-size: 1.1rem; font-weight: 600;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            transition: all 0.12s ease;
+            user-select: none;
+        }
+        .pin-key:hover {
+            background: rgba(59,130,246,0.12);
+            border-color: rgba(59,130,246,0.35);
+            color: #fff;
+        }
+        .pin-key:active {
+            transform: scale(0.93);
+            background: rgba(59,130,246,0.2);
+        }
+        .pin-key.del {
+            color: #64748b; font-size: 1rem;
+        }
+        .pin-key.del:hover { color: #f87171; border-color: rgba(239,68,68,0.35); background: rgba(239,68,68,0.08); }
+        .pin-key.empty { pointer-events: none; background: transparent; border-color: transparent; }
+
+        .pin-error-msg {
+            font-size: 0.72rem; color: #f87171; margin-top: 14px;
+            min-height: 18px; font-weight: 500;
+            transition: opacity 0.2s;
+        }
+
         /* ── Loading overlay ── */
         .loading-overlay {
             display: none; position: fixed; inset: 0;
@@ -387,6 +500,39 @@ $tokens = $_SESSION['page_tokens'];
     </style>
 </head>
 <body>
+
+<!-- PIN Modal -->
+<div class="pin-overlay" id="pinOverlay">
+    <div class="pin-box">
+        <div class="pin-icon">🔐</div>
+        <div class="pin-title">Masukkan PIN</div>
+        <div class="pin-sub">Akses panel Starlink OctoLink<br>memerlukan PIN 4 digit</div>
+
+        <div class="pin-dots">
+            <div class="pin-dot" id="d0"></div>
+            <div class="pin-dot" id="d1"></div>
+            <div class="pin-dot" id="d2"></div>
+            <div class="pin-dot" id="d3"></div>
+        </div>
+
+        <div class="pin-numpad">
+            <button class="pin-key" onclick="pinInput('1')">1</button>
+            <button class="pin-key" onclick="pinInput('2')">2</button>
+            <button class="pin-key" onclick="pinInput('3')">3</button>
+            <button class="pin-key" onclick="pinInput('4')">4</button>
+            <button class="pin-key" onclick="pinInput('5')">5</button>
+            <button class="pin-key" onclick="pinInput('6')">6</button>
+            <button class="pin-key" onclick="pinInput('7')">7</button>
+            <button class="pin-key" onclick="pinInput('8')">8</button>
+            <button class="pin-key" onclick="pinInput('9')">9</button>
+            <div class="pin-key empty"></div>
+            <button class="pin-key" onclick="pinInput('0')">0</button>
+            <button class="pin-key del" onclick="pinDelete()">⌫</button>
+        </div>
+
+        <div class="pin-error-msg" id="pinError"></div>
+    </div>
+</div>
 
 <!-- Background mesh -->
 <div class="bg-mesh">
@@ -496,7 +642,81 @@ $tokens = $_SESSION['page_tokens'];
 </div>
 </div>
 
+<script src="/config.js"></script>
 <script>
+// ── PIN Logic ──────────────────────────────────────────────────
+const CORRECT_PIN    = (typeof CONFIG !== 'undefined') ? CONFIG.ACCESS_PIN : '1234';
+const PIN_STORAGE_KEY = 'sl_pin_ok';
+
+let pinBuffer = '';
+
+function checkPinSession() {
+    // localStorage tidak persist di incognito → otomatis minta PIN lagi
+    if (localStorage.getItem(PIN_STORAGE_KEY) === '1') {
+        document.getElementById('pinOverlay').classList.add('hidden');
+    }
+}
+
+function pinInput(digit) {
+    if (pinBuffer.length >= 4) return;
+    pinBuffer += digit;
+    updateDots();
+    if (pinBuffer.length === 4) {
+        setTimeout(verifyPin, 120);
+    }
+}
+
+function pinDelete() {
+    pinBuffer = pinBuffer.slice(0, -1);
+    updateDots();
+    clearError();
+}
+
+function updateDots() {
+    for (let i = 0; i < 4; i++) {
+        const dot = document.getElementById('d' + i);
+        dot.classList.toggle('filled', i < pinBuffer.length);
+        dot.classList.remove('error');
+    }
+}
+
+function verifyPin() {
+    if (pinBuffer === CORRECT_PIN) {
+        localStorage.setItem(PIN_STORAGE_KEY, '1');
+        const box = document.querySelector('.pin-box');
+        box.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        box.style.opacity    = '0';
+        box.style.transform  = 'scale(0.92)';
+        setTimeout(() => document.getElementById('pinOverlay').classList.add('hidden'), 300);
+    } else {
+        // Salah PIN
+        for (let i = 0; i < 4; i++) {
+            const dot = document.getElementById('d' + i);
+            dot.classList.remove('filled');
+            dot.classList.add('error');
+        }
+        document.getElementById('pinError').textContent = 'PIN salah, coba lagi';
+        setTimeout(() => {
+            pinBuffer = '';
+            updateDots();
+        }, 600);
+    }
+}
+
+function clearError() {
+    document.getElementById('pinError').textContent = '';
+}
+
+// Dukung input keyboard
+document.addEventListener('keydown', function(e) {
+    if (document.getElementById('pinOverlay').classList.contains('hidden')) return;
+    if (e.key >= '0' && e.key <= '9') pinInput(e.key);
+    if (e.key === 'Backspace') pinDelete();
+});
+
+checkPinSession();
+// ── End PIN Logic ──────────────────────────────────────────────
+
 const PAGE_TOKENS = <?= json_encode($tokens) ?>;
 
 function navigate(el, event) {
