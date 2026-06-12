@@ -305,6 +305,11 @@ function navigate(el, event) {
     document.getElementById('loadingOverlay').classList.add('active');
     window.location.href = '/?p=' + token;
 }
+
+// Fix: sembunyikan loading overlay saat tombol back browser ditekan
+window.addEventListener('pageshow', function(e) {
+    document.getElementById('loadingOverlay').classList.remove('active');
+});
 </script>
 
 </body>

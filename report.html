@@ -500,5 +500,13 @@ Next <span>→</span>
 </div>
 
 <script src="js/stepper.js"></script>
+
+<!-- Back to Home -->
+<a href="/" id="backHomeBtn" style="position:fixed;bottom:24px;left:24px;z-index:9999;display:flex;align-items:center;gap:8px;padding:10px 18px;background:rgba(15,23,42,0.85);border:1px solid rgba(255,255,255,0.12);border-radius:50px;color:#cbd5e1;text-decoration:none;font-size:13px;font-weight:600;font-family:'Segoe UI',system-ui,sans-serif;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 4px 20px rgba(0,0,0,0.4);transition:all 0.2s ease;">&#8592; Home</a>
+<script>
+var _b=document.getElementById('backHomeBtn');
+_b.addEventListener('mouseenter',function(){this.style.background='rgba(59,130,246,0.25)';this.style.borderColor='rgba(59,130,246,0.5)';this.style.color='#fff';});
+_b.addEventListener('mouseleave',function(){this.style.background='rgba(15,23,42,0.85)';this.style.borderColor='rgba(255,255,255,0.12)';this.style.color='#cbd5e1';});
+</script>
 </body>
 </html>
