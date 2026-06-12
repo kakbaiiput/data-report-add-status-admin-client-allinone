@@ -13,8 +13,8 @@ require_once __DIR__ . '/db.php';
 
 // ── CORS: hanya izinkan origin yang dikenal ──────────────────────────────────
 $allowed_origins = [
-    'https://starlink.octolink.id',
-    'https://client.octolink.id',
+    'https://starlink.octolink.id',  // same-server, tapi tetap izinkan
+    'https://client.octolink.id',    // subdomain client butuh CORS
 ];
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 if (in_array($origin, $allowed_origins, true)) {

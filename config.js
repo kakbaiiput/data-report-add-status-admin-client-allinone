@@ -2,7 +2,7 @@ const CONFIG = {
 
     API_URL: 'https://script.google.com/macros/s/AKfycbwE9TamMNcJgqTBCXgcZqS40jmxK_nA4sFWiKu3cZpdgwcluVWQovxnXD3LnNhz6UZ9/exec',
 
-    VPS_API_URL: 'https://data.octolink.id/api/data.php',
+    VPS_API_URL: 'https://starlink.octolink.id/api/data.php',
 
     // API key untuk request ke VPS — harus sama dengan API_KEY di api/db.php
     API_KEY: 'sk-octolink-x9f2mK7pQr4nZvBw',
@@ -35,7 +35,7 @@ const CONFIG = {
     const _fetch = window.fetch.bind(window);
     window.fetch = function (input, init) {
         const url = (typeof input === 'string') ? input : (input.url || '');
-        if (url.includes('data.octolink.id')) {
+        if (url.includes('/api/data.php')) {
             init = init || {};
             init.headers = Object.assign({}, init.headers, {
                 'X-Api-Key': CONFIG.API_KEY
