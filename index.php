@@ -519,7 +519,7 @@ $tokens = $_SESSION['page_tokens'];
 <body>
 
 <!-- PIN Modal -->
-<div class="pin-overlay" id="pinOverlay">
+<div class="pin-overlay<?= !empty($_SESSION['pin_ok']) ? ' hidden' : '' ?>" id="pinOverlay">
     <div class="pin-box">
         <div class="pin-icon">🔐</div>
         <div class="pin-title">Masukkan PIN</div>
