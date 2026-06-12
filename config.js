@@ -4,10 +4,6 @@ const CONFIG = {
 
     VPS_API_URL: 'https://data.octolink.id/api/data.php',
 
-    // PIN 4 digit untuk akses homepage starlink.octolink.id
-    // Ganti angka di bawah sesuai kebutuhan
-    ACCESS_PIN: '1234',
-
     API_TIMEOUT: 35000,
 
     RETRY_ATTEMPTS: 2,

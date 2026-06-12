@@ -1,6 +1,23 @@
 <?php
 session_start();
 
+// ─── PIN CONFIG (ubah di sini, tidak pernah terekspos ke browser) ───
+define('ACCESS_PIN', '1234');
+
+// ─── PIN VERIFY endpoint (AJAX POST dari modal) ──────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['verify'])) {
+    header('Content-Type: application/json');
+    $input = json_decode(file_get_contents('php://input'), true);
+    $pin   = preg_replace('/\D/', '', $input['pin'] ?? '');
+    if ($pin === ACCESS_PIN) {
+        $_SESSION['pin_ok'] = true;
+        echo json_encode(['ok' => true]);
+    } else {
+        echo json_encode(['ok' => false]);
+    }
+    exit;
+}
+
 // ─── ROUTER ───────────────────────────────────────────────────
 if (isset($_GET['p'])) {
     $token = trim($_GET['p']);
@@ -642,31 +659,48 @@ $tokens = $_SESSION['page_tokens'];
 </div>
 </div>
 
-<script src="/config.js"></script>
 <script>
-// ── PIN Logic ──────────────────────────────────────────────────
-const CORRECT_PIN    = (typeof CONFIG !== 'undefined') ? CONFIG.ACCESS_PIN : '1234';
-const PIN_STORAGE_KEY = 'sl_pin_ok';
+// ── PIN Logic (verifikasi server-side, PIN tidak pernah di JS) ──
+const PIN_STORAGE_KEY = 'sl_pin_v';
 
-let pinBuffer = '';
+let pinBuffer  = '';
+let pinLocked  = false; // cegah double-submit
 
 function checkPinSession() {
-    // localStorage tidak persist di incognito → otomatis minta PIN lagi
-    if (localStorage.getItem(PIN_STORAGE_KEY) === '1') {
-        document.getElementById('pinOverlay').classList.add('hidden');
-    }
+    // Session PHP sudah verified? Langsung sembunyikan modal
+    <?php if (!empty($_SESSION['pin_ok'])): ?>
+    hidePinOverlay();
+    <?php else: ?>
+    // localStorage belum ada → tampilkan modal (sudah default visible)
+    if (localStorage.getItem(PIN_STORAGE_KEY) !== '1') return;
+    // Ada di localStorage → re-validasi ke server sekali (anti bypass)
+    fetch('/?verify=1', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({pin: '__recheck__'})
+    }).then(r => r.json()).then(d => {
+        // Jika session PHP hilang (tab baru incognito), minta PIN lagi
+        if (!d.ok) {
+            localStorage.removeItem(PIN_STORAGE_KEY);
+        } else {
+            hidePinOverlay();
+        }
+    }).catch(() => {});
+    <?php endif; ?>
 }
 
 function pinInput(digit) {
-    if (pinBuffer.length >= 4) return;
+    if (pinLocked || pinBuffer.length >= 4) return;
     pinBuffer += digit;
     updateDots();
     if (pinBuffer.length === 4) {
+        pinLocked = true;
         setTimeout(verifyPin, 120);
     }
 }
 
 function pinDelete() {
+    if (pinLocked) return;
     pinBuffer = pinBuffer.slice(0, -1);
     updateDots();
     clearError();
@@ -681,33 +715,49 @@ function updateDots() {
 }
 
 function verifyPin() {
-    if (pinBuffer === CORRECT_PIN) {
-        localStorage.setItem(PIN_STORAGE_KEY, '1');
-        const box = document.querySelector('.pin-box');
-        box.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-        box.style.opacity    = '0';
-        box.style.transform  = 'scale(0.92)';
-        setTimeout(() => document.getElementById('pinOverlay').classList.add('hidden'), 300);
-    } else {
-        // Salah PIN
-        for (let i = 0; i < 4; i++) {
-            const dot = document.getElementById('d' + i);
-            dot.classList.remove('filled');
-            dot.classList.add('error');
+    fetch('/?verify=1', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({pin: pinBuffer})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            localStorage.setItem(PIN_STORAGE_KEY, '1');
+            hidePinOverlay();
+        } else {
+            pinWrong();
         }
-        document.getElementById('pinError').textContent = 'PIN salah, coba lagi';
-        setTimeout(() => {
-            pinBuffer = '';
-            updateDots();
-        }, 600);
+    })
+    .catch(() => { pinWrong(); });
+}
+
+function pinWrong() {
+    for (let i = 0; i < 4; i++) {
+        const dot = document.getElementById('d' + i);
+        dot.classList.remove('filled');
+        dot.classList.add('error');
     }
+    document.getElementById('pinError').textContent = 'PIN salah, coba lagi';
+    setTimeout(() => {
+        pinBuffer = '';
+        pinLocked = false;
+        updateDots();
+    }, 700);
+}
+
+function hidePinOverlay() {
+    const box = document.querySelector('.pin-box');
+    box.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+    box.style.opacity    = '0';
+    box.style.transform  = 'scale(0.92)';
+    setTimeout(() => document.getElementById('pinOverlay').classList.add('hidden'), 260);
 }
 
 function clearError() {
     document.getElementById('pinError').textContent = '';
 }
 
-// Dukung input keyboard
 document.addEventListener('keydown', function(e) {
     if (document.getElementById('pinOverlay').classList.contains('hidden')) return;
     if (e.key >= '0' && e.key <= '9') pinInput(e.key);
