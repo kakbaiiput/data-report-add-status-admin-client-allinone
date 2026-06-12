@@ -190,112 +190,117 @@ $tokens = $_SESSION['page_tokens'];
             font-size: 0.875rem; color: #64748b; font-weight: 400;
         }
 
-        /* ── Menu grid ── */
+        /* ── Menu list (vertical) ── */
         .menu-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
 
         .menu-card {
             position: relative; overflow: hidden;
             background: var(--c-surface);
             border: 1px solid var(--c-border);
-            border-radius: 20px;
-            padding: 20px;
+            border-radius: 16px;
+            padding: 16px 20px;
             text-decoration: none; color: inherit;
-            display: flex; flex-direction: column; gap: 14px;
+            display: flex; flex-direction: row;
+            align-items: center; gap: 16px;
             cursor: pointer;
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+            transition: border-color 0.22s ease, box-shadow 0.22s ease, background 0.22s ease, transform 0.22s ease;
             will-change: transform;
         }
 
-        /* shimmer line top */
+        /* spotlight: mengikuti posisi mouse via JS */
+        .menu-card .spotlight {
+            position: absolute; inset: 0; border-radius: 16px;
+            pointer-events: none; z-index: 0;
+            background: radial-gradient(280px circle at var(--mx, 50%) var(--my, 50%),
+                var(--card-glow) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .menu-card:hover .spotlight { opacity: 1; }
+
+        /* border sweep kiri */
         .menu-card::before {
             content: '';
-            position: absolute; top: 0; left: 20%; right: 20%; height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            border-radius: 1px;
+            position: absolute; left: 0; top: 10%; bottom: 10%;
+            width: 2px; border-radius: 2px;
+            background: linear-gradient(180deg, transparent, var(--card-accent-solid), transparent);
+            transform: scaleY(0);
+            transform-origin: center;
+            transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
         }
-
-        /* colored glow on hover via pseudo */
-        .menu-card::after {
-            content: '';
-            position: absolute; inset: 0; border-radius: 20px;
-            opacity: 0; transition: opacity 0.25s ease;
-            background: radial-gradient(ellipse at 30% 40%, var(--card-glow) 0%, transparent 65%);
-        }
+        .menu-card:hover::before { transform: scaleY(1); }
 
         .menu-card:hover {
-            transform: translateY(-4px) scale(1.01);
+            transform: translateX(6px);
             border-color: var(--card-accent);
-            box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px var(--card-accent);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(255,255,255,0.04);
         }
-        .menu-card:hover::after { opacity: 1; }
-        .menu-card:active { transform: translateY(-1px) scale(1); }
+        .menu-card:active { transform: translateX(3px); }
 
         /* Card themes */
-        .card-data   { --card-accent: rgba(59,130,246,0.5);  --card-glow: rgba(59,130,246,0.12); }
-        .card-report { --card-accent: rgba(34,197,94,0.5);   --card-glow: rgba(34,197,94,0.12); }
-        .card-status { --card-accent: rgba(245,158,11,0.5);  --card-glow: rgba(245,158,11,0.12); }
-        .card-admin  { --card-accent: rgba(239,68,68,0.5);   --card-glow: rgba(239,68,68,0.12); }
-        .card-client { --card-accent: rgba(139,92,246,0.5);  --card-glow: rgba(139,92,246,0.12); }
-        .card-add    { --card-accent: rgba(20,184,166,0.5);  --card-glow: rgba(20,184,166,0.12); }
-
-        .card-top {
-            display: flex; align-items: flex-start; justify-content: space-between;
-        }
+        .card-data   { --card-accent: rgba(59,130,246,0.45);  --card-glow: rgba(59,130,246,0.1);  --card-accent-solid: #3b82f6; }
+        .card-report { --card-accent: rgba(34,197,94,0.45);   --card-glow: rgba(34,197,94,0.1);   --card-accent-solid: #22c55e; }
+        .card-status { --card-accent: rgba(245,158,11,0.45);  --card-glow: rgba(245,158,11,0.1);  --card-accent-solid: #f59e0b; }
+        .card-admin  { --card-accent: rgba(239,68,68,0.45);   --card-glow: rgba(239,68,68,0.1);   --card-accent-solid: #ef4444; }
+        .card-client { --card-accent: rgba(139,92,246,0.45);  --card-glow: rgba(139,92,246,0.1);  --card-accent-solid: #8b5cf6; }
+        .card-add    { --card-accent: rgba(20,184,166,0.45);  --card-glow: rgba(20,184,166,0.1);  --card-accent-solid: #14b8a6; }
 
         .card-icon-wrap {
-            width: 44px; height: 44px; border-radius: 13px;
+            width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
             display: flex; align-items: center; justify-content: center;
-            font-size: 20px;
-            border: 1px solid rgba(255,255,255,0.08);
+            font-size: 19px;
+            border: 1px solid rgba(255,255,255,0.07);
             position: relative; z-index: 1;
+            transition: transform 0.25s ease;
         }
-        .card-data   .card-icon-wrap { background: rgba(59,130,246,0.18); }
-        .card-report .card-icon-wrap { background: rgba(34,197,94,0.18); }
-        .card-status .card-icon-wrap { background: rgba(245,158,11,0.18); }
-        .card-admin  .card-icon-wrap { background: rgba(239,68,68,0.18); }
-        .card-client .card-icon-wrap { background: rgba(139,92,246,0.18); }
-        .card-add    .card-icon-wrap { background: rgba(20,184,166,0.18); }
+        .menu-card:hover .card-icon-wrap { transform: scale(1.1) rotate(-4deg); }
+
+        .card-data   .card-icon-wrap { background: rgba(59,130,246,0.15); }
+        .card-report .card-icon-wrap { background: rgba(34,197,94,0.15); }
+        .card-status .card-icon-wrap { background: rgba(245,158,11,0.15); }
+        .card-admin  .card-icon-wrap { background: rgba(239,68,68,0.15); }
+        .card-client .card-icon-wrap { background: rgba(139,92,246,0.15); }
+        .card-add    .card-icon-wrap { background: rgba(20,184,166,0.15); }
+
+        .card-body {
+            flex: 1; position: relative; z-index: 1;
+        }
+        .card-label {
+            font-size: 0.88rem; font-weight: 700; color: #f1f5f9;
+            letter-spacing: -0.01em; margin-bottom: 2px;
+            transition: color 0.2s ease;
+        }
+        .card-data:hover   .card-label { color: #93c5fd; }
+        .card-report:hover .card-label { color: #86efac; }
+        .card-status:hover .card-label { color: #fcd34d; }
+        .card-admin:hover  .card-label { color: #fca5a5; }
+        .card-client:hover .card-label { color: #c4b5fd; }
+        .card-add:hover    .card-label { color: #5eead4; }
+
+        .card-desc {
+            font-size: 0.71rem; color: #475569; line-height: 1.4; font-weight: 400;
+        }
 
         .card-arrow {
-            width: 26px; height: 26px; border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.08);
-            background: rgba(255,255,255,0.04);
+            flex-shrink: 0; position: relative; z-index: 1;
+            width: 28px; height: 28px; border-radius: 9px;
+            border: 1px solid rgba(255,255,255,0.07);
+            background: rgba(255,255,255,0.03);
             display: flex; align-items: center; justify-content: center;
-            opacity: 0; transition: opacity 0.2s ease;
-            color: #94a3b8; font-size: 13px;
-            position: relative; z-index: 1;
+            color: #334155; font-size: 14px; font-weight: 600;
+            transition: all 0.25s ease;
         }
-        .menu-card:hover .card-arrow { opacity: 1; }
-
-        .card-body { position: relative; z-index: 1; }
-        .card-label {
-            font-size: 0.9rem; font-weight: 700; color: #f1f5f9;
-            letter-spacing: -0.01em; margin-bottom: 3px;
-        }
-        .card-desc {
-            font-size: 0.72rem; color: #475569; line-height: 1.45;
-            font-weight: 400;
-        }
-
-        /* ── Divider ── */
-        .section-divider {
-            display: flex; align-items: center; gap: 12px;
-            margin: 28px 0 20px;
-        }
-        .section-divider span {
-            font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em;
-            text-transform: uppercase; color: #334155; white-space: nowrap;
-        }
-        .section-divider::before,
-        .section-divider::after {
-            content: ''; flex: 1; height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+        .menu-card:hover .card-arrow {
+            color: var(--card-accent-solid);
+            border-color: var(--card-accent);
+            background: rgba(255,255,255,0.06);
+            transform: translateX(3px);
         }
 
         /* ── Footer ── */
@@ -354,11 +359,7 @@ $tokens = $_SESSION['page_tokens'];
         /* ── Responsive ── */
         @media (max-width: 420px) {
             .logo-text h1 { font-size: 1.6rem; }
-            .menu-grid    { grid-template-columns: 1fr 1fr; gap: 10px; }
-            .menu-card    { padding: 16px; border-radius: 16px; }
-        }
-        @media (max-width: 320px) {
-            .menu-grid { grid-template-columns: 1fr; }
+            .menu-card    { padding: 14px 16px; }
         }
 
         /* ── Card entrance animation ── */
@@ -417,73 +418,67 @@ $tokens = $_SESSION['page_tokens'];
         <p class="header-sub">Pilih modul yang ingin diakses</p>
     </div>
 
-    <!-- Menu grid -->
+    <!-- Menu list -->
     <div class="menu-grid">
 
         <a class="menu-card card-data" href="#" data-page="data" onclick="navigate(this,event)">
-            <div class="card-top">
-                <div class="card-icon-wrap">📊</div>
-                <div class="card-arrow">›</div>
-            </div>
+            <div class="spotlight"></div>
+            <div class="card-icon-wrap">📊</div>
             <div class="card-body">
                 <div class="card-label">Data Client</div>
                 <div class="card-desc">Lihat & kelola data pelanggan</div>
             </div>
+            <div class="card-arrow">›</div>
         </a>
 
         <a class="menu-card card-report" href="#" data-page="report" onclick="navigate(this,event)">
-            <div class="card-top">
-                <div class="card-icon-wrap">🧾</div>
-                <div class="card-arrow">›</div>
-            </div>
+            <div class="spotlight"></div>
+            <div class="card-icon-wrap">🧾</div>
             <div class="card-body">
                 <div class="card-label">Report</div>
                 <div class="card-desc">Form pembayaran & laporan</div>
             </div>
+            <div class="card-arrow">›</div>
         </a>
 
         <a class="menu-card card-status" href="#" data-page="status" onclick="navigate(this,event)">
-            <div class="card-top">
-                <div class="card-icon-wrap">📡</div>
-                <div class="card-arrow">›</div>
-            </div>
+            <div class="spotlight"></div>
+            <div class="card-icon-wrap">📡</div>
             <div class="card-body">
                 <div class="card-label">Status</div>
                 <div class="card-desc">Cek status client aktif</div>
             </div>
+            <div class="card-arrow">›</div>
         </a>
 
         <a class="menu-card card-admin" href="#" data-page="admin" onclick="navigate(this,event)">
-            <div class="card-top">
-                <div class="card-icon-wrap">🔧</div>
-                <div class="card-arrow">›</div>
-            </div>
+            <div class="spotlight"></div>
+            <div class="card-icon-wrap">🔧</div>
             <div class="card-body">
                 <div class="card-label">Admin</div>
                 <div class="card-desc">Panel administrasi sistem</div>
             </div>
+            <div class="card-arrow">›</div>
         </a>
 
         <a class="menu-card card-client" href="#" data-page="client" onclick="navigate(this,event)">
-            <div class="card-top">
-                <div class="card-icon-wrap">👤</div>
-                <div class="card-arrow">›</div>
-            </div>
+            <div class="spotlight"></div>
+            <div class="card-icon-wrap">👤</div>
             <div class="card-body">
                 <div class="card-label">Client</div>
                 <div class="card-desc">Cek data & status akun</div>
             </div>
+            <div class="card-arrow">›</div>
         </a>
 
         <a class="menu-card card-add" href="#" data-page="add" onclick="navigate(this,event)">
-            <div class="card-top">
-                <div class="card-icon-wrap">➕</div>
-                <div class="card-arrow">›</div>
-            </div>
+            <div class="spotlight"></div>
+            <div class="card-icon-wrap">➕</div>
             <div class="card-body">
                 <div class="card-label">Add Client</div>
                 <div class="card-desc">Daftarkan client baru</div>
             </div>
+            <div class="card-arrow">›</div>
         </a>
 
     </div>
@@ -515,6 +510,17 @@ function navigate(el, event) {
 
 window.addEventListener('pageshow', function() {
     document.getElementById('loadingOverlay').classList.remove('active');
+});
+
+// Spotlight: update posisi CSS var sesuai posisi mouse di tiap card
+document.querySelectorAll('.menu-card').forEach(card => {
+    card.addEventListener('mousemove', function(e) {
+        const rect = card.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width  * 100).toFixed(1) + '%';
+        const y = ((e.clientY - rect.top)  / rect.height * 100).toFixed(1) + '%';
+        card.style.setProperty('--mx', x);
+        card.style.setProperty('--my', y);
+    });
 });
 </script>
 
