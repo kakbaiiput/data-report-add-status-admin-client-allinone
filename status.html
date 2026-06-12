@@ -772,7 +772,7 @@
             }
         }
     </style>
-
+    <script src="/config.js"></script>
 </head>
 <body>
     <div class="container">
@@ -985,7 +985,7 @@
     </button>
 
     <script>
-        const VPS_API_URL = 'https://data.octolink.id/api/data.php';
+        const VPS_API_URL = (typeof CONFIG !== 'undefined') ? CONFIG.VPS_API_URL : 'https://data.octolink.id/api/data.php';
 
         function copyToClipboard(text, button) {
             navigator.clipboard.writeText(text).then(() => {

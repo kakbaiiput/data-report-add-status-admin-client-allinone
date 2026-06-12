@@ -1048,6 +1048,7 @@
             }
         }
     </style>
+    <script src="/config.js"></script>
 </head>
 <body>
     <button class="debug-toggle" onclick="toggleDebug()" title="Toggle Debug Panel">🐛</button>
@@ -1200,7 +1201,7 @@
 
     <script>
         // Global variables - VPS PHP API
-        const VPS_API_URL = 'https://data.octolink.id/api/data.php';
+        const VPS_API_URL = (typeof CONFIG !== 'undefined') ? CONFIG.VPS_API_URL : 'https://data.octolink.id/api/data.php';
         let currentSearchType = 'kit';
         let debugMode = false;
 

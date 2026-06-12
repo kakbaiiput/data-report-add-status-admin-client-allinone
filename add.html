@@ -1271,11 +1271,11 @@
         // Get API URL from config
         let SCRIPT_URL;
         try {
-            SCRIPT_URL = CONFIG.CUSTOM_APIS.client || CONFIG.API_URL;
+            SCRIPT_URL = CONFIG.API_URL;
             console.log('✅ Using API URL from config:', SCRIPT_URL);
         } catch (configError) {
-            SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
-            console.warn('⚠️ Config not found, using fallback URL.');
+            SCRIPT_URL = '';
+            console.warn('⚠️ config.js tidak ditemukan.');
         }
 
         // 📊 Stepper Functions

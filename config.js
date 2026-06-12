@@ -2,7 +2,7 @@ const CONFIG = {
 
     API_URL: 'https://script.google.com/macros/s/AKfycbwE9TamMNcJgqTBCXgcZqS40jmxK_nA4sFWiKu3cZpdgwcluVWQovxnXD3LnNhz6UZ9/exec',
 
-    VPS_API_URL: 'https://report.octolink.id/api/data.php',
+    VPS_API_URL: 'https://data.octolink.id/api/data.php',
 
     API_TIMEOUT: 35000,
 

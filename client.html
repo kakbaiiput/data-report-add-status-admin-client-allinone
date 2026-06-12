@@ -853,7 +853,7 @@
             }
         }
     </style>
-
+    <script src="/config.js"></script>
 </head>
 <body>
     <div class="container">
@@ -945,7 +945,7 @@
 
     <script>
         // VPS PHP API
-        const VPS_API_URL = 'https://data.octolink.id/api/data.php';
+        const VPS_API_URL = (typeof CONFIG !== 'undefined') ? CONFIG.VPS_API_URL : 'https://data.octolink.id/api/data.php';
         
         // Variable untuk menyimpan kit yang sedang dicari
         let currentSearchedKit = '';
