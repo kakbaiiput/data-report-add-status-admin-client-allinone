@@ -1,0 +1,2329 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Starlink Admin Panel</title>
+    <!-- 
+    📋 DEPENDENCIES:
+    - config.js (HARUS ada di folder yang sama untuk API URL tersentralisasi)
+    -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 50%, #2d3748 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e2e8f0;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #1a202c;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            border: 1px solid #2d3748;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            padding: 15px 25px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .header h1 {
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+        
+        .admin-badge {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.75em;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .main-content {
+            padding: 25px;
+            background: #1a202c;
+        }
+        
+        .search-section {
+            margin-bottom: 25px;
+        }
+
+        .search-type-selector {
+            margin-bottom: 20px;
+        }
+
+        .search-type-label {
+            color: #e2e8f0;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+        }
+
+        .animated-dropdown {
+            position: relative;
+            background: #2d3748;
+            border-radius: 12px;
+            border: 2px solid #4a5568;
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .animated-dropdown:hover {
+            border-color: #4299e1;
+            box-shadow: 0 8px 25px rgba(66, 153, 225, 0.15);
+        }
+
+        .dropdown-header {
+            padding: 18px 24px;
+            background: linear-gradient(135deg, #374151 0%, #4a5568 100%);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dropdown-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(66, 153, 225, 0.1) 0%, rgba(49, 130, 206, 0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .dropdown-header:hover::before {
+            opacity: 1;
+        }
+
+        .animated-dropdown.open .dropdown-header {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+        }
+
+        .animated-dropdown.open .dropdown-header::before {
+            opacity: 0;
+        }
+
+        .dropdown-current {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #e2e8f0;
+            font-weight: 600;
+            font-size: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .animated-dropdown.open .dropdown-current {
+            color: white;
+        }
+
+        .dropdown-icon {
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .animated-dropdown.open .dropdown-icon {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .dropdown-text {
+            flex: 1;
+        }
+
+        .dropdown-title {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 2px;
+        }
+
+        .dropdown-subtitle {
+            font-size: 13px;
+            color: #9ca3af;
+            opacity: 0.8;
+        }
+
+        .animated-dropdown.open .dropdown-subtitle {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .dropdown-arrow {
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            font-size: 20px;
+            color: #9ca3af;
+            position: relative;
+            z-index: 1;
+        }
+
+        .animated-dropdown.open .dropdown-arrow {
+            transform: rotate(180deg);
+            color: white;
+        }
+
+        .dropdown-options {
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            background: #2d3748;
+        }
+
+        .animated-dropdown.open .dropdown-options {
+            max-height: 600px;
+        }
+
+        .dropdown-option {
+            padding: 16px 24px;
+            border-bottom: 1px solid #374151;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #e2e8f0;
+            transition: all 0.3s ease;
+            transform: translateX(-20px);
+            opacity: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dropdown-option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(66, 153, 225, 0.1) 0%, rgba(49, 130, 206, 0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .animated-dropdown.open .dropdown-option {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .dropdown-option:nth-child(1) { transition-delay: 0.1s; }
+        .dropdown-option:nth-child(2) { transition-delay: 0.15s; }
+        .dropdown-option:nth-child(3) { transition-delay: 0.2s; }
+        .dropdown-option:nth-child(4) { transition-delay: 0.25s; }
+        .dropdown-option:nth-child(5) { transition-delay: 0.3s; }
+        .dropdown-option:nth-child(6) { transition-delay: 0.35s; }
+        .dropdown-option:nth-child(7) { transition-delay: 0.4s; }
+
+        .dropdown-option:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-option:hover {
+            background: #374151;
+            padding-left: 28px;
+            transform: translateX(4px);
+        }
+
+        .dropdown-option:hover::before {
+            opacity: 1;
+        }
+
+        .dropdown-option.selected {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            font-weight: 600;
+            border-left: 4px solid #60a5fa;
+        }
+
+        .dropdown-option.selected::before {
+            opacity: 0;
+        }
+
+        .dropdown-option.selected:hover {
+            background: linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%);
+            padding-left: 28px;
+        }
+
+        .option-icon {
+            font-size: 20px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .dropdown-option.selected .option-icon {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .option-text {
+            flex: 1;
+            position: relative;
+            z-index: 1;
+        }
+
+        .option-title {
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 2px;
+        }
+
+        .option-subtitle {
+            font-size: 12px;
+            color: #9ca3af;
+            opacity: 0.8;
+        }
+
+        .dropdown-option.selected .option-subtitle {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .option-indicator {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #6b7280;
+            border-radius: 50%;
+            position: relative;
+            transition: all 0.3s ease;
+            background: #374151;
+            z-index: 1;
+        }
+
+        .option-indicator::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 6px;
+            height: 6px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .dropdown-option.selected .option-indicator {
+            border-color: white;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .dropdown-option.selected .option-indicator::after {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .search-form {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .search-input-container {
+            flex: 1;
+            position: relative;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #2d3748;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: #2d3748;
+            color: #e2e8f0;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #4299e1;
+            background: #374151;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+        
+        .search-input::placeholder {
+            color: #9ca3af;
+        }
+
+        /* ✅ FIXED: Autocomplete Suggestions Styling */
+        .suggestions-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #1a202c;
+            border: 2px solid #4299e1;
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 99999;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+            display: none;
+        }
+
+        .suggestions-dropdown.show {
+            display: block;
+            animation: slideDown 0.2s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .suggestion-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #2d3748;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #e2e8f0;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            user-select: none; /* ✅ Prevent text selection */
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-item:hover {
+            background: #374151;
+            color: #4299e1;
+            transform: translateX(4px);
+        }
+
+        .suggestion-item.highlighted {
+            background: #4299e1;
+            color: white;
+        }
+
+        .suggestion-icon {
+            font-size: 16px;
+            opacity: 0.7;
+        }
+
+        .suggestion-text {
+            flex: 1;
+        }
+
+        .suggestion-loading {
+            padding: 16px;
+            text-align: center;
+            color: #9ca3af;
+            font-style: italic;
+        }
+
+        .suggestion-no-results {
+            padding: 16px;
+            text-align: center;
+            color: #9ca3af;
+            font-style: italic;
+        }
+
+        /* Custom scrollbar for suggestions */
+        .suggestions-dropdown::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .suggestions-dropdown::-webkit-scrollbar-track {
+            background: #2d3748;
+        }
+
+        .suggestions-dropdown::-webkit-scrollbar-thumb {
+            background: #4299e1;
+            border-radius: 3px;
+        }
+
+        .suggestions-dropdown::-webkit-scrollbar-thumb:hover {
+            background: #3182ce;
+        }
+        
+        .search-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+        
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(66, 153, 225, 0.3);
+        }
+        
+        .search-btn:active {
+            transform: translateY(0);
+        }
+        
+        .search-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #4299e1;
+        }
+        
+        .loading-spinner {
+            border: 3px solid #2d3748;
+            border-top: 3px solid #4299e1;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7);
+            }
+            50% { 
+                transform: scale(1.05);
+                box-shadow: 0 0 0 10px rgba(251, 191, 36, 0);
+            }
+        }
+        
+        .result-section {
+            display: none;
+        }
+
+        .results-header {
+            background: #2d3748;
+            border-radius: 12px;
+            padding: 20px 25px;
+            margin-bottom: 20px;
+            border: 1px solid #4a5568;
+            text-align: center;
+        }
+
+        .results-counter {
+            font-size: 1.5em;
+            color: #4299e1;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .results-subtitle {
+            color: #a0aec0;
+            font-size: 1em;
+        }
+        
+        .result-card {
+            background: #2d3748;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid #4a5568;
+            transition: all 0.3s ease;
+        }
+
+        .result-card:hover {
+            border-color: #4299e1;
+            box-shadow: 0 8px 25px rgba(66, 153, 225, 0.15);
+        }
+        
+        .result-title {
+            font-size: 1.4em;
+            color: #e2e8f0;
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .row-info {
+            background: #4299e1;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            font-weight: normal;
+        }
+
+        .result-index {
+            background: linear-gradient(135deg, #805ad5 0%, #6b46c1 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        
+        .data-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .data-row {
+            background: #374151;
+            border-radius: 8px;
+            padding: 12px 16px;
+            border: 1px solid #4a5568;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .data-row:hover {
+            background: #404957;
+            border-color: #6b7280;
+        }
+        
+        .data-row:hover .copy-btn-inline {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .data-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .data-text {
+            color: #e2e8f0;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        
+        .copy-btn-inline {
+            background: #4299e1;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0.7;
+            visibility: visible;
+        }
+        
+        .copy-btn-inline:hover {
+            background: #3182ce;
+            transform: scale(1.05);
+            opacity: 1;
+        }
+        
+        .copy-btn-inline.copied {
+            background: #48bb78;
+            opacity: 1 !important;
+        }
+        
+        .credential-section {
+            background: #2d3748;
+            border-radius: 8px;
+            padding: 12px 16px;
+            border: 1px solid #4a5568;
+            margin: 4px 0;
+        }
+        
+        .credential-header {
+            color: #e2e8f0;
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .credential-line {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 0 6px 20px;
+            color: #e2e8f0;
+            font-size: 14px;
+            border-left: 2px solid #4299e1;
+            margin-left: 10px;
+            margin-bottom: 4px;
+            background: #374151;
+            border-radius: 4px;
+            padding-left: 12px;
+            padding-right: 12px;
+        }
+        
+        .credential-line:hover {
+            background: #404957;
+        }
+        
+        .credential-line:hover .copy-btn-small {
+            opacity: 1;
+        }
+        
+        .credential-text {
+            font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+            word-break: break-all;
+            flex: 1;
+        }
+        
+        .copy-btn-small {
+            background: #ed8936;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 0.7em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0.7;
+        }
+        
+        .copy-btn-small:hover {
+            background: #dd6b20;
+            transform: scale(1.05);
+            opacity: 1;
+        }
+        
+        .copy-btn-small.copied {
+            background: #48bb78;
+            opacity: 1 !important;
+        }
+
+        .kit-serial-section {
+            background: #2d3748;
+            border-radius: 8px;
+            padding: 12px 16px;
+            border: 1px solid #4a5568;
+            margin: 4px 0;
+        }
+
+        .kit-serial-header {
+            color: #e2e8f0;
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .kit-serial-pair {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 8px 12px;
+            background: #374151;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border-left: 3px solid #4299e1;
+        }
+
+        .kit-serial-pair:last-child {
+            margin-bottom: 0;
+        }
+
+        .kit-line, .serial-line, .paket-line {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 0;
+        }
+
+        .kit-text, .serial-text, .paket-text {
+            font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: 600;
+            flex: 1;
+            word-break: break-word;
+        }
+
+        .kit-text {
+            color: #60a5fa;
+        }
+
+        .serial-text {
+            color: #34d399;
+        }
+
+        .paket-text {
+            color: #fcd34d;
+        }
+
+        .kit-label, .serial-label, .paket-label {
+            font-size: 12px;
+            font-weight: 500;
+            margin-right: 8px;
+            min-width: 60px;
+        }
+
+        .kit-label {
+            color: #93c5fd;
+        }
+
+        .serial-label {
+            color: #6ee7b7;
+        }
+
+        .paket-label {
+            color: #fbbf24;
+        }
+        
+        .wa-link {
+            display: inline;
+            background: none;
+            color: #48bb78;
+            text-decoration: underline;
+            font-weight: 600;
+            font-size: inherit;
+            transition: all 0.3s ease;
+            margin-left: 4px;
+        }
+        
+        .wa-link:hover {
+            color: #38a169;
+            text-decoration: none;
+        }
+        
+        .error-message {
+            background: #2d3748;
+            color: #f56565;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            text-align: center;
+            border: 1px solid #f56565;
+        }
+        
+        .not-found-message {
+            background: #2d3748;
+            color: #ed8936;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            text-align: center;
+            border: 1px solid #ed8936;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 15px;
+            color: #9ca3af;
+            font-size: 0.8em;
+            background: #1a202c;
+            border-top: 1px solid #2d3748;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #48bb78;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .debug-panel {
+            background: #1e2029;
+            border: 2px solid #f59e0b;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .debug-panel.show {
+            display: block;
+        }
+
+        .debug-title {
+            color: #f59e0b;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .debug-info {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #9ca3af;
+            background: #2d3748;
+            padding: 8px;
+            border-radius: 4px;
+            margin: 5px 0;
+            word-break: break-all;
+        }
+
+        .debug-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #f59e0b;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 18px;
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .debug-toggle:hover {
+            background: #d97706;
+            transform: scale(1.1);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 12px;
+            }
+            
+            .header {
+                padding: 12px 20px;
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+            }
+            
+            .header-left {
+                justify-content: center;
+            }
+            
+            .header h1 {
+                font-size: 1.2em;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+
+            .dropdown-header {
+                padding: 16px 20px;
+            }
+
+            .dropdown-option {
+                padding: 14px 20px;
+            }
+
+            .dropdown-icon, .option-icon {
+                width: 35px;
+                height: 35px;
+                font-size: 18px;
+            }
+
+            .dropdown-title, .option-title {
+                font-size: 14px;
+            }
+
+            .dropdown-subtitle, .option-subtitle {
+                font-size: 11px;
+            }
+            
+            .search-form {
+                flex-direction: column;
+            }
+            
+            .result-title {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .credential-line {
+                font-size: 13px;
+                padding-right: 45px;
+            }
+            
+            .copy-btn-small {
+                padding: 2px 5px;
+                font-size: 0.65em;
+            }
+
+            .debug-toggle {
+                top: 10px;
+                right: 10px;
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+
+            .kit-serial-pair {
+                padding: 6px 10px;
+            }
+
+            .kit-text, .serial-text, .paket-text {
+                font-size: 13px;
+            }
+
+            /* Mobile suggestions */
+            .suggestions-dropdown {
+                max-height: 200px;
+            }
+
+            .suggestion-item {
+                padding: 14px 16px;
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="debug-toggle" onclick="toggleDebug()" title="Toggle Debug Panel">🐛</button>
+
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>🛡️ Starlink Admin Panel</h1>
+            </div>
+            <div class="admin-badge">👨‍💼 ADMIN</div>
+        </div>
+        
+        <div class="main-content">
+            <div class="debug-panel" id="debugPanel">
+                <div class="debug-title">
+                    🐛 Debug Information
+                </div>
+                <div class="debug-info" id="debugInfo">
+                    Debug mode is enabled. Search information will appear here.
+                </div>
+            </div>
+
+            <div class="search-section">
+                <div class="search-type-selector">
+                    <div class="search-type-label">
+                        🔍 Search Type:
+                    </div>
+                    
+                    <div class="animated-dropdown" id="searchTypeDropdown">
+                        <div class="dropdown-header" onclick="toggleDropdown()">
+                            <div class="dropdown-current">
+                                <div class="dropdown-icon">🛰️</div>
+                                <div class="dropdown-text">
+                                    <div class="dropdown-title">KIT Number</div>
+                                    <div class="dropdown-subtitle">Search by Starlink KIT Number</div>
+                                </div>
+                            </div>
+                            <div class="dropdown-arrow">▼</div>
+                        </div>
+                        
+                        <div class="dropdown-options" id="dropdownOptions">
+                            <div class="dropdown-option selected" data-value="kit" onclick="selectOption('kit', '🛰️', 'KIT Number', 'Search by Starlink KIT Number')">
+                                <div class="option-icon">🛰️</div>
+                                <div class="option-text">
+                                    <div class="option-title">KIT Number</div>
+                                    <div class="option-subtitle">Search by Starlink KIT Number</div>
+                                </div>
+                                <div class="option-indicator"></div>
+                            </div>
+
+                            <div class="dropdown-option" data-value="serial" onclick="selectOption('serial', '🔢', 'Serial Number', 'Search by Starlink Serial Number')">
+                                <div class="option-icon">🔢</div>
+                                <div class="option-text">
+                                    <div class="option-title">Serial Number</div>
+                                    <div class="option-subtitle">Search by Starlink Serial Number</div>
+                                </div>
+                                <div class="option-indicator"></div>
+                            </div>
+                            
+                            <div class="dropdown-option" data-value="login" onclick="selectOption('login', '🌐', 'Login Starlink', 'Search by Starlink credentials')">
+                                <div class="option-icon">🌐</div>
+                                <div class="option-text">
+                                    <div class="option-title">Login Starlink</div>
+                                    <div class="option-subtitle">Search by Starlink credentials</div>
+                                </div>
+                                <div class="option-indicator"></div>
+                            </div>
+                            
+                            <div class="dropdown-option" data-value="email" onclick="selectOption('email', '📧', 'Email Client', 'Search by client email')">
+                                <div class="option-icon">📧</div>
+                                <div class="option-text">
+                                    <div class="option-title">Email Client</div>
+                                    <div class="option-subtitle">Search by client email</div>
+                                </div>
+                                <div class="option-indicator"></div>
+                            </div>
+                            
+                            <div class="dropdown-option" data-value="phone" onclick="selectOption('phone', '📱', 'Nomor CS', 'Search by customer service number')">
+                                <div class="option-icon">📱</div>
+                                <div class="option-text">
+                                    <div class="option-title">Nomor CS</div>
+                                    <div class="option-subtitle">Search by customer service number</div>
+                                </div>
+                                <div class="option-indicator"></div>
+                            </div>
+                            
+                            <div class="dropdown-option" data-value="account" onclick="selectOption('account', '🔢', 'Account Number', 'Search by account number')">
+                                <div class="option-icon">🔢</div>
+                                <div class="option-text">
+                                    <div class="option-title">Account Number</div>
+                                    <div class="option-subtitle">Search by account number</div>
+                                </div>
+                                <div class="option-indicator"></div>
+                            </div>
+                            
+                            <div class="dropdown-option" data-value="name" onclick="selectOption('name', '👤', 'Nama Client', 'Search by client name with suggestions')">
+                                <div class="option-icon">👤</div>
+                                <div class="option-text">
+                                    <div class="option-title">Nama Client</div>
+                                    <div class="option-subtitle">Search by client name with suggestions</div>
+                                </div>
+                                <div class="option-indicator"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <form class="search-form" id="searchForm">
+                    <div class="search-input-container">
+                        <input 
+                            type="text" 
+                            class="search-input" 
+                            id="searchInput" 
+                            placeholder="Enter Starlink KIT Number for Complete Data..."
+                            autocomplete="off"
+                            required
+                        >
+                        <!-- ✅ FIXED: Suggestions dropdown -->
+                        <div class="suggestions-dropdown" id="suggestionsDropdown">
+                            <!-- Suggestions will be dynamically populated here -->
+                        </div>
+                    </div>
+                    <button type="submit" class="search-btn" id="searchBtn">
+                        🔍 Search
+                    </button>
+                </form>
+                
+                <div class="loading" id="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Fetching complete data...</p>
+                </div>
+            </div>
+            
+            <div class="result-section" id="resultSection">
+                <!-- Results akan ditampilkan di sini -->
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; 2025 Starlink Admin Panel - Fixed Autocomplete & Search ✅</p>
+            <p style="font-size: 0.7em; color: #6b7280; margin-top: 5px;" id="apiInfo">
+                🔗 Loading API configuration...
+            </p>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast">
+        ✅ Data copied successfully!
+    </div>
+
+    <script>
+        // Global variables - VPS PHP API
+        const VPS_API_URL = 'https://data.octolink.id/api/data.php';
+        let currentSearchType = 'kit';
+        let debugMode = false;
+
+        // ✅ FIXED: Improved autocomplete variables
+        let allActiveClientNames = [];
+        let isActiveClientsLoaded = false;
+        let currentSuggestionIndex = -1;
+        let autocompleteTimeout = null;
+        let isShowingSuggestions = false;
+        let isSubmittingForm = false; // ✅ NEW: Prevent multiple submissions
+
+        // Get DOM elements
+        const searchForm = document.getElementById('searchForm');
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const loading = document.getElementById('loading');
+        const resultSection = document.getElementById('resultSection');
+        const suggestionsDropdown = document.getElementById('suggestionsDropdown');
+
+        // Debug functions
+        function toggleDebug() {
+            debugMode = !debugMode;
+            const debugPanel = document.getElementById('debugPanel');
+            if (debugMode) {
+                debugPanel.classList.add('show');
+                logDebug('🐛 Debug mode enabled');
+            } else {
+                debugPanel.classList.remove('show');
+            }
+        }
+
+        function logDebug(message, data = null) {
+            if (!debugMode) return;
+            
+            const debugInfo = document.getElementById('debugInfo');
+            const timestamp = new Date().toLocaleTimeString();
+            let logEntry = `[${timestamp}] ${message}`;
+            
+            if (data) {
+                logEntry += `\n${JSON.stringify(data, null, 2)}`;
+            }
+            
+            debugInfo.innerHTML = logEntry + '\n\n' + debugInfo.innerHTML;
+            console.log('[ADMIN DEBUG]', message, data);
+        }
+
+        // Escape HTML safely for data attributes
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.toString()
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#x27;');
+        }
+
+        // Dropdown functions
+        function toggleDropdown() {
+            const dropdown = document.getElementById('searchTypeDropdown');
+            dropdown.classList.toggle('open');
+            
+            // Hide suggestions when toggling search type dropdown
+            hideSuggestions();
+        }
+
+        async function selectOption(value, icon, title, subtitle) {
+            currentSearchType = value;
+            
+            logDebug(`🔄 Search type changed to: ${value}`);
+            
+            // ✅ FIXED: Close dropdown FIRST to fix UI bug
+            const dropdown = document.getElementById('searchTypeDropdown');
+            dropdown.classList.remove('open');
+            
+            // Update dropdown display
+            const dropdownCurrent = document.querySelector('.dropdown-current');
+            dropdownCurrent.innerHTML = `
+                <div class="dropdown-icon">${icon}</div>
+                <div class="dropdown-text">
+                    <div class="dropdown-title">${title}</div>
+                    <div class="dropdown-subtitle">${subtitle}</div>
+                </div>
+            `;
+            
+            // Update selected state
+            const allOptions = document.querySelectorAll('.dropdown-option');
+            allOptions.forEach(option => option.classList.remove('selected'));
+            document.querySelector(`[data-value="${value}"]`).classList.add('selected');
+            
+            // Update placeholder and clear input first
+            updatePlaceholder();
+            searchInput.value = '';
+            hideSuggestions();
+            
+            // ✅ FIXED: Load client names AFTER UI updates
+            if (value === 'name' && !isActiveClientsLoaded) {
+                logDebug('🚀 Loading active client names for autocomplete...');
+                
+                // Show loading in placeholder
+                searchInput.placeholder = 'Loading client names...';
+                searchInput.disabled = true;
+                
+                await loadAllActiveClientNames();
+                
+                // Re-enable input and update placeholder
+                searchInput.disabled = false;
+                updatePlaceholder(); // Reset to normal placeholder
+                logDebug(`✅ Loaded ${allActiveClientNames.length} active client names for suggestions`);
+            }
+        }
+
+        function updatePlaceholder() {
+            const placeholders = {
+                'kit': 'Enter Starlink KIT Number for Complete Data...',
+                'serial': 'Enter Starlink Serial Number for Complete Data...', // ✅ NEW
+                'login': 'Enter Login Starlink credentials for Complete Data...',
+                'email': 'Enter Email Client for Complete Data...',
+                'phone': 'Enter Nomor CS Client for Complete Data...',
+                'account': 'Enter Account Number for Complete Data...',
+                'name': 'Start typing client name for suggestions...'
+            };
+            
+            searchInput.placeholder = placeholders[currentSearchType];
+        }
+
+        // ✅ NEW: Debounce function
+        function debounce(func, wait) {
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(autocompleteTimeout);
+                    func(...args);
+                };
+                clearTimeout(autocompleteTimeout);
+                autocompleteTimeout = setTimeout(later, wait);
+            };
+        }
+
+        // ✅ FIXED: Load all active client names once at page load
+        async function loadAllActiveClientNames() {
+            if (isActiveClientsLoaded) {
+                return allActiveClientNames;
+            }
+
+            try {
+                logDebug('🚀 Loading ALL active client names at startup...');
+
+                const response = await fetch(`${VPS_API_URL}?sheet=client-aktif&_=${Date.now()}`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                if (data.status === 'success' && data.data) {
+                    allActiveClientNames = data.data
+                        .map(row => (row['A'] || '').trim())
+                        .filter(name => name)
+                        .sort();
+                    isActiveClientsLoaded = true;
+
+                    logDebug('✅ All active client names loaded:', {
+                        total: allActiveClientNames.length,
+                        sample: allActiveClientNames.slice(0, 5)
+                    });
+
+                    return allActiveClientNames;
+                } else {
+                    logDebug('❌ No client names data:', data);
+                    return [];
+                }
+
+            } catch (error) {
+                logDebug('❌ Error loading active client names:', error.message);
+                return [];
+            }
+        }
+
+        // ✅ FIXED: Fast local filtering instead of API calls
+        function getFilteredSuggestions(query) {
+            if (!query || query.length < 2) {
+                return [];
+            }
+
+            const queryLower = query.toLowerCase();
+            
+            // Filter from cached active client names (much faster!)
+            const filtered = allActiveClientNames.filter(name => 
+                name.toLowerCase().includes(queryLower)
+            );
+            
+            return filtered.slice(0, 10); // Limit to 10 suggestions
+        }
+
+        // ✅ FIXED: Simplified suggestions without complex positioning
+        async function showSuggestions(query) {
+            if (currentSearchType !== 'name' || !query || query.length < 2) {
+                hideSuggestions();
+                return;
+            }
+
+            // Ensure active client names are loaded
+            if (!isActiveClientsLoaded) {
+                // Show loading state
+                suggestionsDropdown.innerHTML = `
+                    <div class="suggestion-loading">
+                        🚀 Loading client names...
+                    </div>
+                `;
+                suggestionsDropdown.classList.add('show');
+                
+                await loadAllActiveClientNames();
+            }
+
+            // Fast local filtering (no API call!)
+            const suggestions = getFilteredSuggestions(query);
+
+            // Check if input still matches (user might have typed more)
+            if (searchInput.value.toLowerCase() !== query.toLowerCase()) {
+                return;
+            }
+
+            if (suggestions.length === 0) {
+                suggestionsDropdown.innerHTML = `
+                    <div class="suggestion-no-results">
+                        😔 No active clients found for "${query}"
+                    </div>
+                `;
+            } else {
+                let suggestionsHTML = '';
+                suggestions.forEach((name, index) => {
+                    // Highlight matching text
+                    const highlightedName = highlightMatchingText(name, query);
+                    
+                    suggestionsHTML += `
+                        <div class="suggestion-item" data-name="${escapeHtml(name)}" data-index="${index}">
+                            <span class="suggestion-icon">👤</span>
+                            <span class="suggestion-text">${highlightedName}</span>
+                        </div>
+                    `;
+                });
+                
+                suggestionsDropdown.innerHTML = suggestionsHTML;
+                
+                // ✅ FIXED: Add click event listeners with proper event handling
+                const suggestionItems = suggestionsDropdown.querySelectorAll('.suggestion-item');
+                suggestionItems.forEach(item => {
+                    item.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        if (isSubmittingForm) return; // Prevent double clicks
+                        
+                        const clientName = this.getAttribute('data-name');
+                        logDebug('✅ Suggestion clicked:', clientName);
+                        selectSuggestion(clientName);
+                    });
+                    
+                    // ✅ FIXED: Prevent text selection on suggestions
+                    item.addEventListener('mousedown', function(e) {
+                        e.preventDefault();
+                    });
+                });
+            }
+
+            suggestionsDropdown.classList.add('show');
+            isShowingSuggestions = true;
+            currentSuggestionIndex = -1;
+
+            logDebug('⚡ Fast suggestions displayed:', {
+                query: query,
+                count: suggestions.length,
+                source: 'Local Cache (Active Clients Only)'
+            });
+        }
+
+        function highlightMatchingText(text, query) {
+            if (!query) return text;
+            
+            const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            return text.replace(regex, '<strong style="color: #4299e1; background: rgba(66, 153, 225, 0.1); padding: 1px 2px; border-radius: 2px;">$1</strong>');
+        }
+
+        function hideSuggestions() {
+            suggestionsDropdown.classList.remove('show');
+            isShowingSuggestions = false;
+            currentSuggestionIndex = -1;
+            
+            // Clear after animation
+            setTimeout(() => {
+                if (!isShowingSuggestions) {
+                    suggestionsDropdown.innerHTML = '';
+                }
+            }, 200);
+        }
+
+        // ✅ FIXED: Improved suggestion selection
+        function selectSuggestion(clientName) {
+            if (isSubmittingForm) return; // Prevent multiple submissions
+            
+            searchInput.value = clientName;
+            hideSuggestions();
+            
+            logDebug('✅ Suggestion selected:', clientName);
+            
+            // ✅ FIXED: Auto-submit with delay and protection
+            isSubmittingForm = true;
+            setTimeout(() => {
+                if (searchForm && searchInput.value.trim() === clientName) {
+                    const submitEvent = new Event('submit', { cancelable: true });
+                    searchForm.dispatchEvent(submitEvent);
+                }
+                
+                // Reset flag after a delay
+                setTimeout(() => {
+                    isSubmittingForm = false;
+                }, 1000);
+            }, 150);
+        }
+
+        function navigateSuggestions(direction) {
+            const suggestionItems = suggestionsDropdown.querySelectorAll('.suggestion-item');
+            
+            if (suggestionItems.length === 0) return;
+
+            // Remove previous highlight
+            if (currentSuggestionIndex >= 0) {
+                suggestionItems[currentSuggestionIndex].classList.remove('highlighted');
+            }
+
+            // Calculate new index
+            if (direction === 'down') {
+                currentSuggestionIndex = Math.min(currentSuggestionIndex + 1, suggestionItems.length - 1);
+            } else if (direction === 'up') {
+                currentSuggestionIndex = Math.max(currentSuggestionIndex - 1, -1);
+            }
+
+            // Apply new highlight
+            if (currentSuggestionIndex >= 0) {
+                suggestionItems[currentSuggestionIndex].classList.add('highlighted');
+                
+                // Scroll into view if needed
+                suggestionItems[currentSuggestionIndex].scrollIntoView({
+                    block: 'nearest',
+                    inline: 'nearest'
+                });
+            }
+        }
+
+        // ✅ FIXED: Faster debounced suggestion (no API call needed)
+        const debouncedShowSuggestions = debounce(showSuggestions, 150);
+
+        // ✅ FIXED: Enhanced input event handler
+        searchInput.addEventListener('input', function(e) {
+            if (isSubmittingForm) return; // Don't trigger during submission
+            
+            const query = e.target.value.trim();
+            
+            if (currentSearchType === 'name' && query.length >= 2) {
+                debouncedShowSuggestions(query);
+            } else {
+                hideSuggestions();
+            }
+        });
+
+        // ✅ FIXED: Enhanced keyboard navigation
+        searchInput.addEventListener('keydown', function(e) {
+            if (isSubmittingForm) return; // Don't handle keys during submission
+            
+            if (!isShowingSuggestions) return;
+
+            switch(e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    navigateSuggestions('down');
+                    break;
+                    
+                case 'ArrowUp':
+                    e.preventDefault();
+                    navigateSuggestions('up');
+                    break;
+                    
+                case 'Enter':
+                    if (currentSuggestionIndex >= 0) {
+                        e.preventDefault();
+                        const suggestionItems = suggestionsDropdown.querySelectorAll('.suggestion-item');
+                        const selectedItem = suggestionItems[currentSuggestionIndex];
+                        if (selectedItem) {
+                            const clientName = selectedItem.getAttribute('data-name');
+                            selectSuggestion(clientName);
+                        }
+                    }
+                    // Let normal form submission happen if no suggestion selected
+                    break;
+                    
+                case 'Escape':
+                    e.preventDefault();
+                    hideSuggestions();
+                    break;
+            }
+        });
+
+        // ✅ FIXED: Hide suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-input-container') && 
+                !e.target.closest('.dropdown-options')) {
+                hideSuggestions();
+            }
+        });
+
+        // ✅ FIXED: Hide suggestions when form submits
+        searchForm.addEventListener('submit', function() {
+            hideSuggestions();
+        });
+
+        // Highlight function
+        function highlightSearchTerm(text, searchTerm) {
+            if (!searchTerm || !text) return text;
+            
+            const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            return text.replace(regex, '<mark style="background: #fbbf24; color: #000; padding: 2px 4px; border-radius: 3px; font-weight: 700; animation: pulse 2s infinite;">$1</mark>');
+        }
+
+        // Kit Serial section generator
+        function generateKitSerialSection(kitData, serialData, packageData, searchedValue = '') {
+            if (!kitData && !serialData) {
+                return `
+                    <div class="kit-serial-section">
+                        <div class="kit-serial-header">
+                            🛰️ Kit & Serial Information
+                        </div>
+                        <div class="kit-serial-pair">
+                            <div class="kit-line">
+                                <span class="kit-label">KIT:</span>
+                                <span class="kit-text">Data tidak tersedia</span>
+                            </div>
+                            <div class="serial-line">
+                                <span class="serial-label">SN:</span>
+                                <span class="serial-text">Data tidak tersedia</span>
+                            </div>
+                            <div class="paket-line">
+                                <span class="paket-label">PAKET:</span>
+                                <span class="paket-text">Data tidak tersedia</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const kitArray = kitData ? (kitData.includes('\n') ? kitData.split('\n').map(k => k.trim()).filter(k => k) : [kitData.trim()]) : ['N/A'];
+            const serialArray = serialData ? (serialData.includes('\n') ? serialData.split('\n').map(s => s.trim()).filter(s => s) : [serialData.trim()]) : ['N/A'];
+            const packageArray = packageData ? (packageData.includes('\n') ? packageData.split('\n').map(p => p.trim()).filter(p => p) : [packageData.trim()]) : ['N/A'];
+
+            // 🐛 Debug: Log pairing information
+            logDebug('📦 Kit-Package Pairing', {
+                kitCount: kitArray.length,
+                serialCount: serialArray.length,
+                packageCount: packageArray.length,
+                kits: kitArray,
+                serials: serialArray,
+                packages: packageArray,
+                pairingStrategy: packageArray.length === 1 ? 'Single package for all kits' : 'Individual pairing'
+            });
+
+            const maxLength = Math.max(kitArray.length, serialArray.length);
+
+            let pairsHTML = '';
+            for (let i = 0; i < maxLength; i++) {
+                const kit = kitArray[i] || 'N/A';
+                const serial = serialArray[i] || 'N/A'; 
+                // 🎯 FIX: Jika hanya ada 1 paket untuk beberapa KIT, gunakan paket yang sama untuk semua
+                const pkg = packageArray.length === 1 ? packageArray[0] : (packageArray[i] || packageArray[0] || 'N/A');
+
+                let kitDisplay = kit;
+                let serialDisplay = serial;
+                
+                // ✅ FIXED: Highlight search term based on search type
+                if (searchedValue) {
+                    if (currentSearchType === 'kit' && kit !== 'N/A' && kit.toLowerCase().includes(searchedValue.toLowerCase())) {
+                        kitDisplay = highlightSearchTerm(kit, searchedValue);
+                    } else if (currentSearchType === 'serial' && serial !== 'N/A' && serial.toLowerCase().includes(searchedValue.toLowerCase())) {
+                        serialDisplay = highlightSearchTerm(serial, searchedValue);
+                    }
+                }
+
+                pairsHTML += `
+                    <div class="kit-serial-pair">
+                        <div class="kit-line">
+                            <span class="kit-label">KIT:</span>
+                            <span class="kit-text">${kitDisplay}</span>
+                            ${kit !== 'N/A' ? `<button class="copy-btn-small" data-copy="${escapeHtml(kit)}">Copy</button>` : ''}
+                        </div>
+                        <div class="serial-line">
+                            <span class="serial-label">SN:</span>
+                            <span class="serial-text">${serialDisplay}</span>
+                            ${serial !== 'N/A' ? `<button class="copy-btn-small" data-copy="${escapeHtml(serial)}">Copy</button>` : ''}
+                        </div>
+                        <div class="paket-line">
+                            <span class="paket-label">PAKET:</span>
+                            <span class="paket-text">${pkg}</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="kit-serial-section">
+                    <div class="kit-serial-header">
+                        🛰️ Kit & Serial Information
+                    </div>
+                    ${pairsHTML}
+                </div>
+            `;
+        }
+
+        // Generate result card
+        function generateResultCard(result, headers, searchedValue, resultIndex, rowNumber) {
+            const columnsToShow = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'K', 'L', 'M', 'N', 'O', 'Q', 'R'];
+            
+            let dataList = '';
+            
+            // Status Client
+            let statusClientHtml = '';
+            if (result.statusClient) {
+                let statusBg = '#374151';
+                let statusIcon = '📊';
+                
+                switch(result.statusClient) {
+                    case 'Client Aktif':
+                        statusBg = 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)';
+                        statusIcon = '✅';
+                        break;
+                    case 'Client Non Aktif':
+                        statusBg = 'linear-gradient(135deg, #f56565 0%, #e53e3e 100%)';
+                        statusIcon = '❌';
+                        break;
+                    case 'Client Lepas':
+                        statusBg = 'linear-gradient(135deg, #ed8936 0%, #dd6b20 100%)';
+                        statusIcon = '🔄';
+                        break;
+                }
+                
+                statusClientHtml = `
+                    <div class="data-row">
+                        <div class="data-content">
+                            <span class="data-text">📊 Status Client: 
+                                <span style="
+                                    display: inline-flex;
+                                    align-items: center;
+                                    gap: 6px;
+                                    padding: 6px 12px;
+                                    background: ${statusBg};
+                                    color: white;
+                                    border-radius: 16px;
+                                    font-weight: 600;
+                                    font-size: 13px;
+                                    margin-left: 8px;
+                                ">
+                                    ${statusIcon} ${result.statusClient}
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Kit & Serial section - I = KIT Number, J = Serial Number, P = Paket
+            dataList += generateKitSerialSection(result['I'], result['J'], result['P'], searchedValue);
+
+            // Process other columns
+            columnsToShow.forEach(col => {
+                let value = result[col] || '-';
+                let label = '';
+                let isCredential = false;
+                
+                if (col === 'B') {
+                    label = '📅 Gmail Credentials';
+                    isCredential = true;
+                } else if (col === 'C') {
+                    label = '🌐 Starlink Credentials';
+                    isCredential = true;
+                } else if (col === 'D') {
+                    label = '🔑 Alternative Login';
+                    isCredential = true;
+                } else {
+                    const iconMap = {
+                        'A': '👤 Name',
+                        'E': '📋 Account Number',
+                        'F': '📧 Client Email',
+                        'G': '📱 Customer Service Number',
+                        'H': '🏠 Address',
+                        'K': '⏰ Jatuh Tempo',
+                        'L': '💰 Code',
+                        'M': '💳 Payment',
+                        'N': '🆔 Transaction ID',
+                        'O': '📊 Status',
+                        'Q': '🔢 Last 4 Digits',
+                        'R': '🔖 No Register'
+                    };
+                    label = iconMap[col] || (headers && headers[col]) || `Column ${col}`;
+                }
+                
+                // Process different field types
+                if (isCredential && value !== '-' && value.includes('\n')) {
+                    const lines = value.split('\n').filter(line => line.trim() !== '');
+                    
+                    dataList += `
+                        <div class="credential-section">
+                            <div class="credential-header">${label}</div>
+                    `;
+                    
+                    lines.forEach((line, index) => {
+                        const trimmedLine = line.trim();
+                        if (trimmedLine) {
+                            dataList += `
+                                <div class="credential-line">
+                                    <span class="credential-text">→ ${trimmedLine}</span>
+                                    <button class="copy-btn-small" data-copy="${escapeHtml(trimmedLine)}">Copy</button>
+                                </div>
+                            `;
+                        }
+                    });
+                    
+                    dataList += '</div>';
+                }
+                // Handle WhatsApp number
+                else if (col === 'G' && value !== '-') {
+                    let cleanNumber = value.replace(/\D/g, '');
+                    if (cleanNumber.startsWith('0')) {
+                        cleanNumber = '62' + cleanNumber.substring(1);
+                    } else if (!cleanNumber.startsWith('62')) {
+                        cleanNumber = '62' + cleanNumber;
+                    }
+                    
+                    const waUrl = `https://wa.me/${cleanNumber}`;
+                    
+                    dataList += `
+                        <div class="data-row">
+                            <div class="data-content">
+                                <span class="data-text">${label}: <a href="${waUrl}" target="_blank" class="wa-link">${value}</a></span>
+                            </div>
+                            <button class="copy-btn-inline" data-copy="${escapeHtml(value)}">Copy</button>
+                        </div>
+                    `;
+                }
+                // Status with styling
+                else if (col === 'O') {
+                    let statusHtml = '';
+                    let statusColor = '#9ca3af';
+                    let statusIcon = '📊';
+                    let statusBg = '#374151';
+                    let statusBorder = '#4a5568';
+                    
+                    switch(value.toLowerCase()) {
+                        case 'lunas':
+                            statusColor = '#ffffff';
+                            statusIcon = '✅';
+                            statusBg = 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)';
+                            statusBorder = '#48bb78';
+                            break;
+                        case 'belum':
+                            statusColor = '#ffffff';
+                            statusIcon = '❌';
+                            statusBg = 'linear-gradient(135deg, #f56565 0%, #e53e3e 100%)';
+                            statusBorder = '#f56565';
+                            break;
+                        case 'pending':
+                            statusColor = '#ffffff';
+                            statusIcon = '⏳';
+                            statusBg = 'linear-gradient(135deg, #ed8936 0%, #dd6b20 100%)';
+                            statusBorder = '#ed8936';
+                            break;
+                        case 'rencana bayarkan':
+                            statusColor = '#ffffff';
+                            statusIcon = '📅';
+                            statusBg = 'linear-gradient(135deg, #4299e1 0%, #3182ce 100%)';
+                            statusBorder = '#4299e1';
+                            break;
+                        default:
+                            statusIcon = '❓';
+                            statusColor = '#e2e8f0';
+                    }
+                    
+                    statusHtml = `
+                        <div style="
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 6px;
+                            padding: 8px 12px;
+                            background: ${statusBg};
+                            color: ${statusColor};
+                            border-radius: 20px;
+                            border: 2px solid ${statusBorder};
+                            font-weight: 600;
+                            font-size: 14px;
+                            text-transform: uppercase;
+                            letter-spacing: 0.5px;
+                            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                        ">
+                            <span style="font-size: 16px;">${statusIcon}</span>
+                            <span>${value}</span>
+                        </div>
+                    `;
+                    
+                    dataList += `
+                        <div class="data-row">
+                            <div class="data-content">
+                                <span class="data-text">${label}: ${statusHtml}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                // Fields without copy button
+                else if (['K', 'L', 'M'].includes(col) && value !== '-') {
+                    dataList += `
+                        <div class="data-row">
+                            <div class="data-content">
+                                <span class="data-text">${label}: ${value}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                // Transaction ID with special styling
+                else if (col === 'N' && value !== '-') {
+                    dataList += `
+                        <div class="data-row">
+                            <div class="data-content">
+                                <span class="data-text">${label}: 
+                                    <span style="
+                                        font-family: 'JetBrains Mono', 'Courier New', monospace;
+                                        background: #f8fafc;
+                                        color: #6366f1;
+                                        padding: 4px 8px;
+                                        border-radius: 6px;
+                                        font-weight: 600;
+                                        border: 1px solid #e2e8f0;
+                                    ">${value}</span>
+                                </span>
+                            </div>
+                            <button class="copy-btn-inline" data-copy="${escapeHtml(value)}">Copy</button>
+                        </div>
+                    `;
+                }
+                // Last 4 Digits with special styling
+                else if (col === 'Q' && value !== '-') {
+                    dataList += `
+                        <div class="data-row">
+                            <div class="data-content">
+                                <span class="data-text">${label}: 
+                                    <span style="
+                                        font-family: 'JetBrains Mono', 'Courier New', monospace;
+                                        background: #fef3c7;
+                                        color: #d97706;
+                                        padding: 4px 8px;
+                                        border-radius: 6px;
+                                        font-weight: 600;
+                                        border: 1px solid #fbbf24;
+                                    ">${value}</span>
+                                </span>
+                            </div>
+                            <button class="copy-btn-inline" data-copy="${escapeHtml(value)}">Copy</button>
+                        </div>
+                    `;
+                }
+                // No Register with special styling
+                else if (col === 'R' && value !== '-') {
+                    dataList += `
+                        <div class="data-row">
+                            <div class="data-content">
+                                <span class="data-text">${label}: 
+                                    <span style="
+                                        font-family: 'JetBrains Mono', 'Courier New', monospace;
+                                        background: #dcfdf7;
+                                        color: #047857;
+                                        padding: 4px 8px;
+                                        border-radius: 6px;
+                                        font-weight: 600;
+                                        border: 1px solid #34d399;
+                                    ">${value}</span>
+                                </span>
+                            </div>
+                            <button class="copy-btn-inline" onclick="copyToClipboard('${value.replace(/'/g, "\\'")}', this)">Copy</button>
+                        </div>
+                    `;
+                }
+                // Regular data with copy button
+                else if (value !== '-') {
+                    // Highlight search term in name field if searching by name
+                    let displayValue = value;
+                    if (col === 'A' && currentSearchType === 'name' && searchedValue) {
+                        displayValue = highlightSearchTerm(value, searchedValue);
+                    }
+                    
+                    dataList += `
+                        <div class="data-row">
+                            <div class="data-content">
+                                <span class="data-text">${label}: ${displayValue}</span>
+                            </div>
+                            <button class="copy-btn-inline" data-copy="${value.replace(/"/g, '&quot;')}">Copy</button>
+                        </div>
+                    `;
+                }
+            });
+
+            return `
+                <div class="result-card">
+                    <div class="result-title">
+                        <div style="display: flex; align-items: center;">
+                            <span class="result-index">${resultIndex}</span>
+                            📋 ${result['A'] || 'Complete Data Found'}
+                        </div>
+                        <span class="row-info">Row ${rowNumber}</span>
+                    </div>
+                    
+                    <div class="data-list">
+                        ${statusClientHtml}
+                        ${dataList}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Display results
+        function displayResults(data, searchedValue = '') {
+            logDebug('📊 Displaying results', {
+                status: data.status,
+                searchedValue: searchedValue,
+                resultCount: Array.isArray(data.data) ? data.data.length : 'Not array'
+            });
+
+            if (data.status === 'success') {
+                const results = Array.isArray(data.data) ? data.data : [data.data];
+                const headers = data.headers;
+                
+                let resultHTML = '';
+                
+                if (results.length > 1) {
+                    resultHTML += `
+                        <div class="results-header">
+                            <div class="results-counter">🎯 ${results.length} Results Found</div>
+                            <div class="results-subtitle">Showing all matching records for "${searchedValue}"</div>
+                        </div>
+                    `;
+                }
+                
+                results.forEach((result, index) => {
+                    const rowNumber = result.rowNumber || data.rowNumber || (index + 1);
+                    const cardHTML = generateResultCard(result, headers, searchedValue, index + 1, rowNumber);
+                    resultHTML += cardHTML;
+                });
+                
+                resultSection.innerHTML = resultHTML;
+                
+            } else if (data.status === 'not_found') {
+                resultSection.innerHTML = `
+                    <div class="not-found-message">
+                        <h3>❌ Data Not Found</h3>
+                        <p>The search value "${searchedValue}" was not found in the database.</p>
+                        <p>Please check the value and try again.</p>
+                    </div>
+                `;
+            } else {
+                displayError(data.message || 'An unknown error occurred.');
+            }
+            
+            resultSection.style.display = 'block';
+        }
+
+        // Loading functions
+        function showLoading() {
+            searchBtn.disabled = true;
+            searchBtn.textContent = 'Searching...';
+            loading.style.display = 'block';
+            resultSection.style.display = 'none';
+        }
+        
+        function hideLoading() {
+            searchBtn.disabled = false;
+            searchBtn.textContent = '🔍 Search';
+            loading.style.display = 'none';
+        }
+
+        // Display error
+        function displayError(message) {
+            logDebug('❌ Displaying error', { message: message });
+            
+            resultSection.innerHTML = `
+                <div class="error-message">
+                    <h3>⚠️ Error Occurred</h3>
+                    <p>${message}</p>
+                    <br>
+                    <small>Check the debug panel (🐛) for more information.</small>
+                </div>
+            `;
+            resultSection.style.display = 'block';
+        }
+
+        // Copy to clipboard - Fixed to handle special characters safely
+        function copyToClipboard(text, button) {
+            // If no text provided, get from data attribute
+            if (!text && button) {
+                text = button.getAttribute('data-copy');
+            }
+            
+            if (!text) {
+                console.error('No text to copy');
+                return;
+            }
+
+            // Clean up HTML entities
+            const originalText = text;
+            text = text.replace(/&amp;/g, '&')
+                      .replace(/&lt;/g, '<')
+                      .replace(/&gt;/g, '>')
+                      .replace(/&quot;/g, '"')
+                      .replace(/&#x27;/g, "'");
+
+            logDebug('📋 Copying to clipboard', {
+                originalText: originalText,
+                cleanedText: text,
+                button: button.className
+            });
+
+            navigator.clipboard.writeText(text).then(function() {
+                const buttonText = button.textContent;
+                button.textContent = '✅ Copied!';
+                button.classList.add('copied');
+                
+                showToast();
+                
+                setTimeout(() => {
+                    button.textContent = buttonText;
+                    button.classList.remove('copied');
+                }, 2000);
+                
+            }).catch(function(err) {
+                logDebug('📋 Clipboard API failed, using fallback', err);
+                
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                try {
+                    document.execCommand('copy');
+                    const buttonText = button.textContent;
+                    button.textContent = '✅ Copied!';
+                    button.classList.add('copied');
+                    
+                    showToast();
+                    
+                    setTimeout(() => {
+                        button.textContent = buttonText;
+                        button.classList.remove('copied');
+                    }, 2000);
+                } catch (err2) {
+                    console.error('Copy failed:', err2);
+                    button.textContent = '❌ Failed';
+                    setTimeout(() => {
+                        button.textContent = 'Copy';
+                    }, 2000);
+                }
+                
+                document.body.removeChild(textArea);
+            });
+        }
+
+        // Event delegation for copy buttons - safer approach
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('copy-btn-inline') || 
+                e.target.classList.contains('copy-btn-small')) {
+                e.preventDefault();
+                copyToClipboard(null, e.target);
+            }
+        });
+
+        // Show toast
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // ✅ FIXED: Search form submission
+        searchForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (isSubmittingForm) {
+                logDebug('⚠️ Form submission blocked - already in progress');
+                return;
+            }
+            
+            const searchValue = searchInput.value.trim();
+            if (!searchValue) {
+                alert('Please enter search value first!');
+                return;
+            }
+
+            // Hide suggestions when submitting
+            hideSuggestions();
+            isSubmittingForm = true;
+
+            logDebug('🔍 Starting search', {
+                searchValue: searchValue,
+                searchType: currentSearchType,
+                apiUrl: VPS_API_URL
+            });
+
+            showLoading();
+
+            try {
+                // Column mapping for each search type
+                const columnMap = {
+                    'kit': 'I',
+                    'serial': 'J',
+                    'login': 'C',
+                    'email': 'F',
+                    'phone': 'G',
+                    'account': 'E',
+                    'name': 'A'
+                };
+
+                // Sheet labels for statusClient field
+                const sheetLabels = {
+                    'client-aktif': 'Client Aktif',
+                    'client-non-aktif': 'Client Non Aktif',
+                    'client-lepas': 'Client Lepas',
+                    'client-tertagih': 'Client Tertagih',
+                    'akun-kosong': 'Akun Kosong'
+                };
+
+                const sheets = Object.keys(sheetLabels);
+                const col = columnMap[currentSearchType];
+                const searchLower = searchValue.toLowerCase();
+
+                logDebug('📡 Fetching all relevant sheets', { sheets, col });
+
+                // Fetch all sheets in parallel
+                const fetchResults = await Promise.all(
+                    sheets.map(sheet =>
+                        fetch(`${VPS_API_URL}?sheet=${sheet}&_=${Date.now()}`)
+                            .then(r => r.json())
+                            .then(d => ({ sheet, data: d }))
+                            .catch(err => ({ sheet, data: null, error: err.message }))
+                    )
+                );
+
+                // Filter matching rows across all sheets
+                const matchingRows = [];
+                fetchResults.forEach(({ sheet, data }) => {
+                    if (!data || data.status !== 'success' || !Array.isArray(data.data)) return;
+                    data.data.forEach(row => {
+                        const cellValue = (row[col] || '').toLowerCase();
+                        let matches = false;
+                        if (currentSearchType === 'name') {
+                            matches = cellValue.includes(searchLower);
+                        } else {
+                            matches = cellValue.includes(searchLower);
+                        }
+                        if (matches) {
+                            matchingRows.push(Object.assign({}, row, { statusClient: sheetLabels[sheet] }));
+                        }
+                    });
+                });
+
+                logDebug('📨 Search complete', {
+                    totalFound: matchingRows.length
+                });
+
+                const data = matchingRows.length > 0
+                    ? { status: 'success', data: matchingRows }
+                    : { status: 'not_found' };
+
+                hideLoading();
+                displayResults(data, searchValue);
+                
+            } catch (error) {
+                hideLoading();
+                displayError(`Failed to access data: ${error.message}`);
+                console.error('Search Error:', error);
+            } finally {
+                // Reset submission flag after a delay
+                setTimeout(() => {
+                    isSubmittingForm = false;
+                }, 500);
+            }
+        });
+
+        // Close dropdown on outside click
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('searchTypeDropdown');
+            if (dropdown && !dropdown.contains(event.target)) {
+                dropdown.classList.remove('open');
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function() {
+            // 📊 Update API info in footer
+            const apiInfo = document.getElementById('apiInfo');
+            if (apiInfo) {
+                apiInfo.innerHTML = `🔗 API: ${VPS_API_URL}`;
+            }
+
+            // Auto focus on search input
+            searchInput.focus();
+
+            logDebug('🚀 Admin panel initialized', {
+                apiUrl: VPS_API_URL,
+                debugMode: debugMode,
+                currentSearchType: currentSearchType,
+                autocompleteEnabled: true
+            });
+        });
+    </script>
+</body>
+</html>

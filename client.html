@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Starlink Data Checker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 50%, #2d3748 100%);
+            min-height: 100vh;
+            padding: 12px;
+            color: #e2e8f0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #1a202c;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            overflow: hidden;
+            border: 1px solid #2d3748;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            padding: 12px 16px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 1.1em;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 0.75em;
+            opacity: 0.85;
+            margin-top: 2px;
+        }
+
+        .main-content {
+            padding: 14px;
+            background: #1a202c;
+        }
+
+        .search-section {
+            margin-bottom: 14px;
+        }
+
+        .search-type-selector {
+            margin-bottom: 10px;
+        }
+
+        .search-type-label {
+            color: #e2e8f0;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+        }
+
+        /* Enhanced Animated Dropdown */
+        .animated-dropdown {
+            position: relative;
+            background: #2d3748;
+            border-radius: 10px;
+            border: 2px solid #4a5568;
+            margin-bottom: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .animated-dropdown:hover {
+            border-color: #4299e1;
+            box-shadow: 0 8px 25px rgba(66, 153, 225, 0.15);
+        }
+
+        .dropdown-header {
+            padding: 10px 14px;
+            background: linear-gradient(135deg, #374151 0%, #4a5568 100%);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dropdown-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(66, 153, 225, 0.1) 0%, rgba(49, 130, 206, 0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .dropdown-header:hover::before {
+            opacity: 1;
+        }
+
+        .animated-dropdown.open .dropdown-header {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+        }
+
+        .animated-dropdown.open .dropdown-header::before {
+            opacity: 0;
+        }
+
+        .dropdown-current {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #e2e8f0;
+            font-weight: 600;
+            font-size: 14px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .animated-dropdown.open .dropdown-current {
+            color: white;
+        }
+
+        .dropdown-icon {
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .animated-dropdown.open .dropdown-icon {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .dropdown-text {
+            flex: 1;
+        }
+
+        .dropdown-title {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 1px;
+        }
+
+        .dropdown-subtitle {
+            font-size: 11px;
+            color: #9ca3af;
+            opacity: 0.8;
+        }
+
+        .animated-dropdown.open .dropdown-subtitle {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .dropdown-arrow {
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            font-size: 16px;
+            color: #9ca3af;
+            position: relative;
+            z-index: 1;
+        }
+
+        .animated-dropdown.open .dropdown-arrow {
+            transform: rotate(180deg);
+            color: white;
+        }
+
+        .dropdown-options {
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            background: #2d3748;
+        }
+
+        .animated-dropdown.open .dropdown-options {
+            max-height: 400px;
+        }
+
+        .dropdown-option {
+            padding: 9px 14px;
+            border-bottom: 1px solid #374151;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #e2e8f0;
+            transition: all 0.3s ease;
+            transform: translateX(-20px);
+            opacity: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dropdown-option.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+            cursor: not-allowed;
+        }
+
+        .dropdown-option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(66, 153, 225, 0.1) 0%, rgba(49, 130, 206, 0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .animated-dropdown.open .dropdown-option {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .dropdown-option:nth-child(1) { transition-delay: 0.1s; }
+        .dropdown-option:nth-child(2) { transition-delay: 0.15s; }
+        .dropdown-option:nth-child(3) { transition-delay: 0.2s; }
+
+        .dropdown-option:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-option:hover:not(.disabled) {
+            background: #374151;
+            padding-left: 18px;
+            transform: translateX(4px);
+        }
+
+        .dropdown-option:hover:not(.disabled)::before {
+            opacity: 1;
+        }
+
+        .dropdown-option.selected {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            font-weight: 600;
+            border-left: 4px solid #60a5fa;
+        }
+
+        .dropdown-option.selected::before {
+            opacity: 0;
+        }
+
+        .dropdown-option.selected:hover {
+            background: linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%);
+            padding-left: 18px;
+        }
+
+        .option-icon {
+            font-size: 16px;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .dropdown-option.selected .option-icon {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .option-text {
+            flex: 1;
+            position: relative;
+            z-index: 1;
+        }
+
+        .option-title {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 1px;
+        }
+
+        .option-subtitle {
+            font-size: 11px;
+            color: #9ca3af;
+            opacity: 0.8;
+        }
+
+        .dropdown-option.selected .option-subtitle {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .option-indicator {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #6b7280;
+            border-radius: 50%;
+            position: relative;
+            transition: all 0.3s ease;
+            background: #374151;
+            z-index: 1;
+        }
+
+        .option-indicator::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 6px;
+            height: 6px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .dropdown-option.selected .option-indicator {
+            border-color: white;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .dropdown-option.selected .option-indicator::after {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .search-form {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid #2d3748;
+            border-radius: 8px;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            background: #2d3748;
+            color: #e2e8f0;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #4299e1;
+            background: #374151;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+        
+        .search-input::placeholder {
+            color: #9ca3af;
+        }
+        
+        .search-btn {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 90px;
+        }
+        
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(66, 153, 225, 0.3);
+        }
+        
+        .search-btn:active {
+            transform: translateY(0);
+        }
+        
+        .search-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #4299e1;
+        }
+        
+        .loading-spinner {
+            border: 3px solid #2d3748;
+            border-top: 3px solid #4299e1;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .result-section {
+            display: none;
+        }
+
+        .results-header {
+            background: #2d3748;
+            border-radius: 10px;
+            padding: 10px 16px;
+            margin-bottom: 12px;
+            border: 1px solid #4a5568;
+            text-align: center;
+        }
+
+        .results-counter {
+            font-size: 1.1em;
+            color: #4299e1;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .results-subtitle {
+            color: #a0aec0;
+            font-size: 0.85em;
+        }
+        
+        .result-card {
+            background: #2d3748;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 10px;
+            border: 1px solid #4a5568;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-card:hover {
+            border-color: #4299e1;
+            box-shadow: 0 8px 25px rgba(66, 153, 225, 0.15);
+            transform: translateY(-3px);
+        }
+
+        .result-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(66, 153, 225, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .result-card:hover::before {
+            left: 100%;
+        }
+        
+        .result-title {
+            font-size: 1.1em;
+            color: #e2e8f0;
+            margin-bottom: 10px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .result-index {
+            background: linear-gradient(135deg, #805ad5 0%, #6b46c1 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 6px 0;
+            border-bottom: 1px solid #374151;
+        }
+        
+        .data-row:last-child {
+            border-bottom: none;
+        }
+        
+        .data-label {
+            font-weight: 600;
+            color: #a0aec0;
+            min-width: 110px;
+            flex-shrink: 0;
+        }
+        
+        .data-value {
+            color: #e2e8f0;
+            font-weight: 500;
+            text-align: right;
+            flex: 1;
+        }
+
+        /* 🆕 Kit & Serial Number Display */
+        .kit-serial-section {
+            background: #374151;
+            border-radius: 10px;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #4a5568;
+        }
+
+        .kit-serial-header {
+            color: #e2e8f0;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .kit-serial-grid {
+            display: grid;
+            gap: 8px;
+        }
+
+        .kit-serial-item {
+            background: #2d3748;
+            border-radius: 8px;
+            padding: 10px;
+            border-left: 4px solid #4299e1;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kit-serial-item.searched {
+            border-left-color: #f56565;
+            background: linear-gradient(135deg, #2d3748 0%, #4a1e1e 100%);
+            box-shadow: 0 4px 15px rgba(245, 101, 101, 0.2);
+        }
+
+        .kit-serial-item.searched::after {
+            content: '🎯 SEARCHED';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #f56565;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .kit-serial-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(66, 153, 225, 0.2);
+        }
+
+        .kit-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .kit-row, .serial-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .kit-label, .serial-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-width: 60px;
+        }
+
+        .kit-label {
+            color: #93c5fd;
+        }
+
+        .serial-label {
+            color: #6ee7b7;
+        }
+
+        .kit-value, .serial-value {
+            font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+            font-size: 13px;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .kit-value {
+            color: #60a5fa;
+        }
+
+        .serial-value {
+            color: #34d399;
+        }
+
+        .package-info {
+            margin-top: 8px;
+            padding: 6px 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            font-size: 13px;
+            color: #fbbf24;
+            font-weight: 500;
+        }
+        
+        .kit-list {
+            text-align: right;
+        }
+        
+        .kit-item {
+            margin-bottom: 8px;
+            padding: 10px 14px;
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(66, 153, 225, 0.2);
+            transform: translateY(0);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .kit-item.searched {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            box-shadow: 0 4px 15px rgba(245, 101, 101, 0.3);
+            border: 2px solid #f56565;
+            padding-right: 40px;
+        }
+        
+        .kit-item.searched::after {
+            content: '🎯';
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            background: rgba(255,255,255,0.9);
+            color: #e53e3e;
+            padding: 2px 6px;
+            border-radius: 50%;
+            font-size: 0.8em;
+            font-weight: 700;
+            text-shadow: none;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .kit-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .kit-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(66, 153, 225, 0.3);
+        }
+        
+        .kit-item.searched:hover {
+            box-shadow: 0 8px 25px rgba(245, 101, 101, 0.4);
+        }
+        
+        .kit-item:hover::before {
+            left: 100%;
+        }
+        
+        .kit-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .kit-number {
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 4px;
+            font-size: 1.1em;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .kit-package {
+            font-size: 0.9em;
+            color: rgba(255,255,255,0.9);
+            font-weight: 500;
+        }
+        
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+        
+        .status-lunas {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+        
+        .status-belum {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            color: white;
+        }
+        
+        .status-pending {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+        }
+        
+        .status-rencana {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+        }
+        
+        .error-message {
+            background: #2d3748;
+            color: #f56565;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            text-align: center;
+            border: 1px solid #f56565;
+        }
+        
+        .not-found-message {
+            background: #2d3748;
+            color: #ed8936;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            text-align: center;
+            border: 1px solid #ed8936;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 10px;
+            color: #9ca3af;
+            font-size: 0.8em;
+            background: #1a202c;
+            border-top: 1px solid #2d3748;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 12px;
+            }
+            
+            .header {
+                padding: 25px 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+
+            .dropdown-header {
+                padding: 16px 20px;
+            }
+
+            .dropdown-option {
+                padding: 14px 20px;
+            }
+
+            .dropdown-icon, .option-icon {
+                width: 35px;
+                height: 35px;
+                font-size: 18px;
+            }
+
+            .dropdown-title, .option-title {
+                font-size: 14px;
+            }
+
+            .dropdown-subtitle, .option-subtitle {
+                font-size: 11px;
+            }
+            
+            .search-form {
+                flex-direction: column;
+            }
+            
+            .data-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+            
+            .data-value, .kit-list {
+                text-align: left;
+            }
+
+            .result-title {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .data-label {
+                min-width: auto;
+            }
+
+            .kit-serial-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .kit-value, .serial-value {
+                font-size: 14px;
+            }
+        }
+    </style>
+
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛰️ Starlink Checker</h1>
+            <p>Cek data layanan Starlink Anda</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="search-section">
+                <!-- Enhanced Animated Dropdown -->
+                <div class="search-type-selector">
+                    <div class="search-type-label">
+                        🔍 Pilih Jenis Pencarian:
+                    </div>
+                    
+                    <div class="animated-dropdown" id="searchTypeDropdown">
+                        <div class="dropdown-header" onclick="toggleDropdown()">
+                            <div class="dropdown-current">
+                                <div class="dropdown-icon">🛰️</div>
+                                <div class="dropdown-text">
+                                    <div class="dropdown-title">Nomor Kit</div>
+                                    <div class="dropdown-subtitle">Search by Starlink Kit ID</div>
+                                </div>
+                            </div>
+                            <div class="dropdown-arrow">▼</div>
+                        </div>
+                        
+                        <div class="dropdown-options" id="dropdownOptions">
+                            <div class="dropdown-option selected" data-value="kit" onclick="selectOption('kit', '🛰️', 'Nomor Kit', 'Search by Starlink Kit ID')">
+                                <div class="option-icon">🛰️</div>
+                                <div class="option-text">
+                                    <div class="option-title">Nomor Kit</div>
+                                    <div class="option-subtitle">Search by Starlink Kit ID</div>
+                                </div>
+                                <div class="option-indicator"></div>
+                            </div>
+                            
+                            <div class="dropdown-option" data-value="email" onclick="selectOption('email', '📧', 'Email Client', 'Search by client email')">
+                                <div class="option-icon">📧</div>
+                                <div class="option-text">
+                                    <div class="option-title">Email Client</div>
+                                    <div class="option-subtitle">Search by client email</div>
+                                </div>
+                                <div class="option-indicator"></div>
+                            </div>
+                            
+                            <div class="dropdown-option disabled" data-value="phone" onclick="selectOption('phone', '📱', 'Nomor WA/CS', 'Search by WhatsApp/CS number')">
+                                <div class="option-icon">📱</div>
+                                <div class="option-text">
+                                    <div class="option-title">Nomor WA/CS</div>
+                                    <div class="option-subtitle">Search by WhatsApp/CS number</div>
+                                </div>
+                                <div class="option-indicator"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <form class="search-form" id="searchForm">
+                    <textarea
+                        class="search-input"
+                        id="searchInput"
+                        placeholder="Masukkan Nomor Kit Starlink... (1 baris = 1 pencarian)"
+                        rows="1"
+                        style="resize:none;overflow:hidden;line-height:1.5;padding-top:10px;padding-bottom:10px;"
+                        required
+                    ></textarea>
+                    <button type="submit" class="search-btn" id="searchBtn">
+                        🔍 Cari
+                    </button>
+                </form>
+                
+                <div class="loading" id="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Mencari data...</p>
+                </div>
+            </div>
+            
+            <div class="result-section" id="resultSection">
+                <!-- Result akan ditampilkan di sini -->
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; 2025 Starlink Data Checker - Updated Column Mapping</p>
+        </div>
+    </div>
+
+    <script>
+        // VPS PHP API
+        const VPS_API_URL = 'https://data.octolink.id/api/data.php';
+        
+        // Variable untuk menyimpan kit yang sedang dicari
+        let currentSearchedKit = '';
+        let currentSearchType = 'kit';
+        
+        // Dropdown functionality
+        function toggleDropdown() {
+            const dropdown = document.getElementById('searchTypeDropdown');
+            dropdown.classList.toggle('open');
+        }
+
+        function selectOption(value, icon, title, subtitle) {
+            // Skip jika option disabled (phone)
+            if (value === 'phone') {
+                return;
+            }
+            
+            currentSearchType = value;
+            
+            // Update dropdown display
+            const dropdownCurrent = document.querySelector('.dropdown-current');
+            dropdownCurrent.innerHTML = `
+                <div class="dropdown-icon">${icon}</div>
+                <div class="dropdown-text">
+                    <div class="dropdown-title">${title}</div>
+                    <div class="dropdown-subtitle">${subtitle}</div>
+                </div>
+            `;
+            
+            // Update selected state
+            const allOptions = document.querySelectorAll('.dropdown-option');
+            allOptions.forEach(option => option.classList.remove('selected'));
+            const selectedOption = document.querySelector(`[data-value="${value}"]`);
+            if (selectedOption && !selectedOption.classList.contains('disabled')) {
+                selectedOption.classList.add('selected');
+            }
+            
+            // Update placeholder
+            updatePlaceholder();
+            
+            // Close dropdown
+            const dropdown = document.getElementById('searchTypeDropdown');
+            dropdown.classList.remove('open');
+        }
+
+        function updatePlaceholder() {
+            const searchInput = document.getElementById('searchInput');
+            switch(currentSearchType) {
+                case 'kit':
+                    searchInput.placeholder = 'Masukkan Nomor Kit Starlink...\n(Bisa multi-baris, 1 baris = 1 pencarian)';
+                    break;
+                case 'email':
+                    searchInput.placeholder = 'Masukkan Email Client...\n(Bisa multi-baris)';
+                    break;
+                case 'phone':
+                    searchInput.placeholder = 'Masukkan Nomor WA/CS...';
+                    break;
+            }
+        }
+        
+        const searchForm = document.getElementById('searchForm');
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const loading = document.getElementById('loading');
+        const resultSection = document.getElementById('resultSection');
+        
+        // Auto-resize textarea
+        searchInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 160) + 'px';
+        });
+
+        searchForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const rawValue = searchInput.value.trim();
+            if (!rawValue) {
+                alert('Masukkan nilai pencarian terlebih dahulu!');
+                return;
+            }
+
+            // Multi-line: tiap baris = 1 keyword pencarian
+            const searchTerms = rawValue.split('\n').map(s => s.trim()).filter(s => s);
+            // Untuk display, gabung semua term
+            currentSearchedKit = searchTerms.join(', ');
+
+            // Show loading
+            showLoading();
+
+            try {
+                // Column mapping for search type
+                const columnMap = {
+                    'kit': 'I',
+                    'email': 'F',
+                    'phone': 'G'
+                };
+
+                // Sheet labels for _sheetCategory field
+                const sheetLabels = {
+                    'client-aktif': 'Client Aktif',
+                    'client-non-aktif': 'Client Non Aktif',
+                    'client-lepas': 'Client Lepas',
+                    'client-tertagih': 'Client Tertagih',
+                    'akun-kosong': 'Akun Kosong'
+                };
+
+                const sheets = Object.keys(sheetLabels);
+                const col = columnMap[currentSearchType];
+                const searchLowers = searchTerms.map(t => t.toLowerCase());
+
+                // Fetch all sheets in parallel
+                const fetchResults = await Promise.all(
+                    sheets.map(sheet =>
+                        fetch(`${VPS_API_URL}?sheet=${sheet}&_=${Date.now()}`)
+                            .then(r => r.json())
+                            .then(d => ({ sheet, data: d }))
+                            .catch(err => ({ sheet, data: null }))
+                    )
+                );
+
+                // Filter matching rows — row cocok jika cocok dengan SALAH SATU term
+                const matchingRows = [];
+                fetchResults.forEach(({ sheet, data }) => {
+                    if (!data || data.status !== 'success' || !Array.isArray(data.data)) return;
+                    data.data.forEach(row => {
+                        const cellValue = (row[col] || '').toLowerCase();
+                        const matched = searchLowers.some(term => cellValue.includes(term));
+                        if (matched) {
+                            matchingRows.push(Object.assign({}, row, { _sheetCategory: sheetLabels[sheet] }));
+                        }
+                    });
+                });
+
+                const result = matchingRows.length > 0
+                    ? { status: 'success', data: matchingRows }
+                    : { status: 'not_found' };
+
+                hideLoading();
+                displayResults(result);
+
+            } catch (error) {
+                hideLoading();
+                displayError('Terjadi kesalahan saat mengakses data. Silakan coba lagi.');
+                console.error('Error:', error);
+            }
+        });
+        
+        function showLoading() {
+            searchBtn.disabled = true;
+            searchBtn.textContent = 'Mencari...';
+            loading.style.display = 'block';
+            resultSection.style.display = 'none';
+        }
+        
+        function hideLoading() {
+            searchBtn.disabled = false;
+            searchBtn.textContent = '🔍 Cari';
+            loading.style.display = 'none';
+        }
+        
+        // 🆕 Function untuk parse Kit Numbers dan Serial Numbers dengan struktur baru
+        function parseKitsAndSerials(kitString, serialString, packageString) {
+            // Parse kit numbers (dari kolom I)
+            const kits = kitString ? (kitString.includes('\n') ? kitString.split('\n') : [kitString]) : [''];
+            
+            // Parse serial numbers (dari kolom J) 
+            const serials = serialString ? (serialString.includes('\n') ? serialString.split('\n') : [serialString]) : [''];
+            
+            // Parse packages (dari kolom P)
+            const packages = packageString ? (packageString.includes('\n') ? packageString.split('\n') : [packageString]) : [''];
+            
+            // Tentukan max length
+            const maxLength = Math.max(kits.length, serials.length, packages.length);
+            
+            // Buat array of objects
+            const result = [];
+            for (let i = 0; i < maxLength; i++) {
+                result.push({
+                    kit: (kits[i] || kits[0] || '').trim(),
+                    serial: (serials[i] || serials[0] || '').trim(),
+                    package: (packages[i] || packages[0] || '').trim()
+                });
+            }
+            
+            return result;
+        }
+
+        // Updated function untuk handle multiple results
+        function displayResults(data) {
+            if (data.status === 'success') {
+                // Check jika data berupa array (multiple results) atau single object
+                const results = Array.isArray(data.data) ? data.data : [data.data];
+                
+                let resultHTML = '';
+                
+                // Header untuk multiple results
+                if (results.length > 1) {
+                    resultHTML += `
+                        <div class="results-header">
+                            <div class="results-counter">🎯 ${results.length} Data Ditemukan</div>
+                            <div class="results-subtitle">Menampilkan semua data yang cocok dengan "${currentSearchedKit}"</div>
+                        </div>
+                    `;
+                }
+                
+                // Generate card untuk setiap result
+                results.forEach((result, index) => {
+                    const cardHTML = generateResultCard(result, index + 1, results.length);
+                    resultHTML += cardHTML;
+                });
+                
+                resultSection.innerHTML = resultHTML;
+                
+            } else if (data.status === 'not_found') {
+                resultSection.innerHTML = `
+                    <div class="not-found-message">
+                        <h3>❌ Data Tidak Ditemukan</h3>
+                        <p>Data yang Anda masukkan tidak ditemukan dalam database.</p>
+                        <p>Pastikan data sudah benar dan coba lagi.</p>
+                    </div>
+                `;
+            } else {
+                displayError(data.message || 'Terjadi kesalahan yang tidak diketahui.');
+            }
+            
+            resultSection.style.display = 'block';
+        }
+
+        // 🆕 Function untuk generate Kit & Serial section dengan struktur baru
+        function generateKitSerialSection(result) {
+            // Extract data dari result dengan column letter keys
+            const kitData = result['I'] || '';
+            const serialData = result['J'] || '';
+            const packageData = result['P'] || '';
+            
+            const kitSerialPairs = parseKitsAndSerials(kitData, serialData, packageData);
+            
+            if (kitSerialPairs.length === 0 || (!kitSerialPairs[0].kit && !kitSerialPairs[0].serial)) {
+                return `
+                    <div class="kit-serial-section">
+                        <div class="kit-serial-header">
+                            🛰️ Kit & Serial Information
+                        </div>
+                        <div class="kit-serial-item">
+                            <div class="kit-info">
+                                <div class="kit-row">
+                                    <span class="kit-label">KIT:</span>
+                                    <span class="kit-value">Data tidak tersedia</span>
+                                </div>
+                                <div class="serial-row">
+                                    <span class="serial-label">Serial:</span>
+                                    <span class="serial-value">Data tidak tersedia</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            let itemsHTML = '';
+            kitSerialPairs.forEach((item, index) => {
+                // Cek apakah kit ini adalah yang dicari
+                const isSearched = item.kit.toLowerCase() === currentSearchedKit.toLowerCase();
+                const searchedClass = isSearched ? ' searched' : '';
+                
+                itemsHTML += `
+                    <div class="kit-serial-item${searchedClass}">
+                        <div class="kit-info">
+                            <div class="kit-row">
+                                <span class="kit-label">KIT:</span>
+                                <span class="kit-value">${item.kit || 'N/A'}</span>
+                            </div>
+                            <div class="serial-row">
+                                <span class="serial-label">Serial:</span>
+                                <span class="serial-value">${item.serial || 'N/A'}</span>
+                            </div>
+                            ${item.package && item.package !== 'N/A' ? `
+                            <div class="package-info">
+                                📦 ${item.package}
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            return `
+                <div class="kit-serial-section">
+                    <div class="kit-serial-header">
+                        🛰️ Kit & Serial Information
+                    </div>
+                    <div class="kit-serial-grid">
+                        ${itemsHTML}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Format tanggal dd/mm/yyyy → "9 Juni 2026"
+        function formatDateID(dateStr) {
+            if (!dateStr) return 'Tidak tersedia';
+            const bulan = ['Januari','Februari','Maret','April','Mei','Juni',
+                           'Juli','Agustus','September','Oktober','November','Desember'];
+            const parts = dateStr.split('/');
+            if (parts.length !== 3) return dateStr;
+            const d = parseInt(parts[0], 10);
+            const m = parseInt(parts[1], 10) - 1;
+            const y = parts[2];
+            if (isNaN(d) || isNaN(m) || !bulan[m]) return dateStr;
+            return `${d} ${bulan[m]} ${y}`;
+        }
+
+        // Function untuk generate single result card dengan struktur baru
+        function generateResultCard(result, resultIndex, totalResults) {
+            // Function untuk mask email
+            function maskEmail(email) {
+                if (!email || email === '-' || !email.includes('@')) {
+                    return email;
+                }
+                
+                const emailParts = email.split('@');
+                const localPart = emailParts[0];
+                const domain = emailParts[1];
+                
+                // Tampilkan 3 karakter pertama + *** + domain
+                const maskedLocal = localPart.substring(0, 3) + '***';
+                return maskedLocal + '@' + domain;
+            }
+            
+            // Use column letter keys
+            const emailClient = result['F'] || 'Email client tidak tersedia';
+            const emailClientMasked = maskEmail(emailClient);
+
+            // Generate Kit & Serial section
+            const kitSerialSection = generateKitSerialSection(result);
+
+            // Tentukan class status badge
+            const statusValue = result['O'] || '';
+            let statusClass = 'status-badge ';
+            switch(statusValue.toLowerCase()) {
+                case 'lunas':
+                case 'terbayarkan':
+                    statusClass += 'status-lunas';
+                    break;
+                case 'belum':
+                    statusClass += 'status-belum';
+                    break;
+                case 'pending':
+                    statusClass += 'status-pending';
+                    break;
+                case 'rencana bayarkan':
+                    statusClass += 'status-rencana';
+                    break;
+                default:
+                    statusClass += 'status-pending';
+            }
+
+            // Return the complete card HTML
+            return `
+                <div class="result-card">
+                    <div class="result-title">
+                        <span>📋 Data Ditemukan</span>
+                        ${totalResults > 1 ? `<span class="result-index">${resultIndex}</span>` : ''}
+                    </div>
+                    
+                    <div class="data-row">
+                        <span class="data-label">👤 Nama:</span>
+                        <span class="data-value">${result['A'] || 'Nama tidak tersedia'}</span>
+                    </div>
+
+                    <div class="data-row">
+                        <span class="data-label">📧 Email Client:</span>
+                        <span class="data-value">${emailClientMasked}</span>
+                    </div>
+
+                    <div class="data-row">
+                        <span class="data-label">📱 No. WhatsApp:</span>
+                        <span class="data-value">${result['G'] || 'Tidak tersedia'}</span>
+                    </div>
+
+                    ${kitSerialSection}
+
+                    <div class="data-row">
+                        <span class="data-label">📅 Jatuh Tempo:</span>
+                        <span class="data-value">${formatDateID(result['K'])}</span>
+                    </div>
+
+                    <div class="data-row">
+                        <span class="data-label">📊 Status:</span>
+                        <span class="data-value">
+                            <span class="${statusClass}">${result['O'] || '-'}</span>
+                        </span>
+                    </div>
+
+                    <div class="data-row">
+                        <span class="data-label">📊 Status Client:</span>
+                        <span class="data-value">${result['_sheetCategory'] || '-'}</span>
+                    </div>
+
+                </div>
+            `;
+        }
+        
+        function displayError(message) {
+            resultSection.innerHTML = `
+                <div class="error-message">
+                    <h3>⚠️ Terjadi Kesalahan</h3>
+                    <p>${message}</p>
+                </div>
+            `;
+            resultSection.style.display = 'block';
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('searchTypeDropdown');
+            if (dropdown && !dropdown.contains(event.target)) {
+                dropdown.classList.remove('open');
+            }
+        });
+        
+        // Auto focus pada input saat halaman dimuat
+        searchInput.focus();
+    </script>
+</body>
+</html>
