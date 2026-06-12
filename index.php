@@ -44,7 +44,7 @@ if (isset($_GET['p'])) {
 }
 
 // ─── INDEX: generate tokens ────────────────────────────────────
-$pages = ['data', 'report', 'status', 'admin', 'client', 'add', 'uob'];
+$pages = ['data', 'uob', 'add', 'status', 'report', 'admin', 'client'];
 $_SESSION['page_tokens'] = [];
 $_SESSION['token_map']   = [];
 foreach ($pages as $page) {
@@ -603,42 +603,12 @@ $tokens = $_SESSION['page_tokens'];
             <div class="card-arrow">›</div>
         </a>
 
-        <a class="menu-card card-report" href="#" data-page="report" onclick="navigate(this,event)">
+        <a class="menu-card card-uob" href="#" data-page="uob" onclick="navigate(this,event)">
             <div class="spotlight"></div>
-            <div class="card-icon-wrap">🧾</div>
+            <div class="card-icon-wrap">🏦</div>
             <div class="card-body">
-                <div class="card-label">Report</div>
-                <div class="card-desc">Form pembayaran & laporan</div>
-            </div>
-            <div class="card-arrow">›</div>
-        </a>
-
-        <a class="menu-card card-status" href="#" data-page="status" onclick="navigate(this,event)">
-            <div class="spotlight"></div>
-            <div class="card-icon-wrap">📡</div>
-            <div class="card-body">
-                <div class="card-label">Status</div>
-                <div class="card-desc">Cek status client aktif</div>
-            </div>
-            <div class="card-arrow">›</div>
-        </a>
-
-        <a class="menu-card card-admin" href="#" data-page="admin" onclick="navigate(this,event)">
-            <div class="spotlight"></div>
-            <div class="card-icon-wrap">🔧</div>
-            <div class="card-body">
-                <div class="card-label">Admin</div>
-                <div class="card-desc">Panel administrasi sistem</div>
-            </div>
-            <div class="card-arrow">›</div>
-        </a>
-
-        <a class="menu-card card-client" href="#" data-page="client" onclick="navigate(this,event)">
-            <div class="spotlight"></div>
-            <div class="card-icon-wrap">👤</div>
-            <div class="card-body">
-                <div class="card-label">Client</div>
-                <div class="card-desc">Cek data & status akun</div>
+                <div class="card-label">Data UOB</div>
+                <div class="card-desc">Data pembayaran UOB Starlink</div>
             </div>
             <div class="card-arrow">›</div>
         </a>
@@ -653,12 +623,42 @@ $tokens = $_SESSION['page_tokens'];
             <div class="card-arrow">›</div>
         </a>
 
-        <a class="menu-card card-uob" href="#" data-page="uob" onclick="navigate(this,event)">
+        <a class="menu-card card-status" href="#" data-page="status" onclick="navigate(this,event)">
             <div class="spotlight"></div>
-            <div class="card-icon-wrap">🏦</div>
+            <div class="card-icon-wrap">📡</div>
             <div class="card-body">
-                <div class="card-label">Data UOB</div>
-                <div class="card-desc">Data pembayaran UOB Starlink</div>
+                <div class="card-label">Status</div>
+                <div class="card-desc">Cek status client aktif</div>
+            </div>
+            <div class="card-arrow">›</div>
+        </a>
+
+        <a class="menu-card card-report" href="#" data-page="report" onclick="navigate(this,event)">
+            <div class="spotlight"></div>
+            <div class="card-icon-wrap">🧾</div>
+            <div class="card-body">
+                <div class="card-label">Report Finance</div>
+                <div class="card-desc">Form pembayaran & laporan</div>
+            </div>
+            <div class="card-arrow">›</div>
+        </a>
+
+        <a class="menu-card card-admin" href="#" data-page="admin" onclick="navigate(this,event)">
+            <div class="spotlight"></div>
+            <div class="card-icon-wrap">🔧</div>
+            <div class="card-body">
+                <div class="card-label">Data Admin</div>
+                <div class="card-desc">Panel administrasi sistem</div>
+            </div>
+            <div class="card-arrow">›</div>
+        </a>
+
+        <a class="menu-card card-client" href="#" data-page="client" onclick="navigate(this,event)">
+            <div class="spotlight"></div>
+            <div class="card-icon-wrap">👤</div>
+            <div class="card-body">
+                <div class="card-label">Data Client</div>
+                <div class="card-desc">Cek data & status akun</div>
             </div>
             <div class="card-arrow">›</div>
         </a>
