@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['verify'])) {
 // ─── ROUTER ───────────────────────────────────────────────────
 if (isset($_GET['p'])) {
     $token = trim($_GET['p']);
-    $allowed_pages = ['data', 'report', 'status', 'admin', 'client', 'add'];
+    $allowed_pages = ['data', 'report', 'status', 'admin', 'client', 'add', 'uob'];
 
     if (
         !empty($token) &&
@@ -30,6 +30,12 @@ if (isset($_GET['p'])) {
     ) {
         $page = $_SESSION['token_map'][$token];
         if (in_array($page, $allowed_pages, true)) {
+            // UOB: redirect ke subfolder PHP app
+            if ($page === 'uob') {
+                $_SESSION['uob_ok'] = true;
+                header('Location: /data-uob/');
+                exit;
+            }
             $file = __DIR__ . '/' . $page . '.html';
             if (file_exists($file)) { readfile($file); exit; }
         }
@@ -38,7 +44,7 @@ if (isset($_GET['p'])) {
 }
 
 // ─── INDEX: generate tokens ────────────────────────────────────
-$pages = ['data', 'report', 'status', 'admin', 'client', 'add'];
+$pages = ['data', 'report', 'status', 'admin', 'client', 'add', 'uob'];
 $_SESSION['page_tokens'] = [];
 $_SESSION['token_map']   = [];
 foreach ($pages as $page) {
@@ -267,6 +273,7 @@ $tokens = $_SESSION['page_tokens'];
         .card-admin  { --card-accent: rgba(239,68,68,0.45);   --card-glow: rgba(239,68,68,0.1);   --card-accent-solid: #ef4444; }
         .card-client { --card-accent: rgba(139,92,246,0.45);  --card-glow: rgba(139,92,246,0.1);  --card-accent-solid: #8b5cf6; }
         .card-add    { --card-accent: rgba(20,184,166,0.45);  --card-glow: rgba(20,184,166,0.1);  --card-accent-solid: #14b8a6; }
+        .card-uob    { --card-accent: rgba(234,179,8,0.45);  --card-glow: rgba(234,179,8,0.1);   --card-accent-solid: #eab308; }
 
         .card-icon-wrap {
             width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
@@ -284,6 +291,7 @@ $tokens = $_SESSION['page_tokens'];
         .card-admin  .card-icon-wrap { background: rgba(239,68,68,0.15); }
         .card-client .card-icon-wrap { background: rgba(139,92,246,0.15); }
         .card-add    .card-icon-wrap { background: rgba(20,184,166,0.15); }
+        .card-uob    .card-icon-wrap { background: rgba(234,179,8,0.15); }
 
         .card-body {
             flex: 1; position: relative; z-index: 1;
@@ -299,6 +307,7 @@ $tokens = $_SESSION['page_tokens'];
         .card-admin:hover  .card-label { color: #fca5a5; }
         .card-client:hover .card-label { color: #c4b5fd; }
         .card-add:hover    .card-label { color: #5eead4; }
+        .card-uob:hover    .card-label { color: #fde047; }
 
         .card-desc {
             font-size: 0.71rem; color: #475569; line-height: 1.4; font-weight: 400;
@@ -640,6 +649,16 @@ $tokens = $_SESSION['page_tokens'];
             <div class="card-body">
                 <div class="card-label">Add Client</div>
                 <div class="card-desc">Daftarkan client baru</div>
+            </div>
+            <div class="card-arrow">›</div>
+        </a>
+
+        <a class="menu-card card-uob" href="#" data-page="uob" onclick="navigate(this,event)">
+            <div class="spotlight"></div>
+            <div class="card-icon-wrap">🏦</div>
+            <div class="card-body">
+                <div class="card-label">Data UOB</div>
+                <div class="card-desc">Data pembayaran UOB Starlink</div>
             </div>
             <div class="card-arrow">›</div>
         </a>
