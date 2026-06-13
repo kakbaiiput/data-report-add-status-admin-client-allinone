@@ -752,6 +752,59 @@
             box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
         }
 
+        /* Category Quick Filter Rows */
+        .category-quick-filters {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        .category-quick-filters-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            align-items: center;
+        }
+        .category-quick-filters-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            min-width: 44px;
+        }
+        .cat-chip {
+            border-radius: 16px;
+            padding: 5px 13px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1.5px solid transparent;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+            background: var(--glass-bg);
+            color: var(--text-primary);
+            border-color: var(--glass-border);
+        }
+        .cat-chip:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .cat-chip.active {
+            color: #fff;
+            border-color: transparent;
+        }
+        /* Status chip colors */
+        .cat-chip[data-status="Ready"].active        { background: linear-gradient(135deg,#10b981,#059669); box-shadow: 0 4px 12px rgba(16,185,129,0.4); }
+        .cat-chip[data-status="Confirmed"].active    { background: linear-gradient(135deg,#3b82f6,#2563eb); box-shadow: 0 4px 12px rgba(59,130,246,0.4); }
+        .cat-chip[data-status="Segera"].active       { background: linear-gradient(135deg,#f59e0b,#d97706); box-shadow: 0 4px 12px rgba(245,158,11,0.4); }
+        .cat-chip[data-status="Paid"].active         { background: linear-gradient(135deg,#8b5cf6,#7c3aed); box-shadow: 0 4px 12px rgba(139,92,246,0.4); }
+        /* Paket chip colors */
+        .cat-chip[data-paket="Regular"].active       { background: linear-gradient(135deg,#06b6d4,#0891b2); box-shadow: 0 4px 12px rgba(6,182,212,0.4); }
+        .cat-chip[data-paket="Lite"].active          { background: linear-gradient(135deg,#f97316,#ea580c); box-shadow: 0 4px 12px rgba(249,115,22,0.4); }
+        .cat-chip[data-paket="Roam"].active          { background: linear-gradient(135deg,#ec4899,#db2777); box-shadow: 0 4px 12px rgba(236,72,153,0.4); }
+        .cat-chip[data-paket="International"].active { background: linear-gradient(135deg,#6366f1,#4f46e5); box-shadow: 0 4px 12px rgba(99,102,241,0.4); }
+
         /* Filter Grid */
         .filter-grid {
             display: grid;
@@ -2797,6 +2850,22 @@
                         <span class="collapse-icon">▼</span>
                     </div>
                     <div class="filter-card-content">
+                        <div class="category-quick-filters">
+                            <div class="category-quick-filters-row">
+                                <span class="category-quick-filters-label">Status</span>
+                                <button class="cat-chip" data-status="Ready"         onclick="toggleCatChip(this,'status','Ready')">Ready</button>
+                                <button class="cat-chip" data-status="Confirmed"     onclick="toggleCatChip(this,'status','Confirmed')">Confirmed</button>
+                                <button class="cat-chip" data-status="Segera"        onclick="toggleCatChip(this,'status','Segera')">Segera</button>
+                                <button class="cat-chip" data-status="Paid"          onclick="toggleCatChip(this,'status','Paid')">Paid</button>
+                            </div>
+                            <div class="category-quick-filters-row">
+                                <span class="category-quick-filters-label">Paket</span>
+                                <button class="cat-chip" data-paket="Regular"        onclick="toggleCatChip(this,'paket','Regular')">Regular</button>
+                                <button class="cat-chip" data-paket="Lite"           onclick="toggleCatChip(this,'paket','Lite')">Lite</button>
+                                <button class="cat-chip" data-paket="Roam"           onclick="toggleCatChip(this,'paket','Roam')">Roam</button>
+                                <button class="cat-chip" data-paket="International"  onclick="toggleCatChip(this,'paket','International')">International</button>
+                            </div>
+                        </div>
                         <div class="filter-grid">
                             <div class="filter-input-group">
                                 <label class="filter-label">Status</label>
@@ -4370,6 +4439,8 @@
                     } else {
                         checkboxFilters[filterType].delete(option);
                     }
+                    // clear cat chips when checkboxes changed manually
+                    document.querySelectorAll(`.cat-chip[data-${filterType}]`).forEach(c => c.classList.remove('active'));
                     updateCheckboxFilterCount(filterType);
                     
                     const checkboxes = document.querySelectorAll(`#${filterType}FilterContent input[type="checkbox"]`);
@@ -4407,6 +4478,36 @@
             });
             
             updateCheckboxFilterCount(filterType);
+        }
+
+        function toggleCatChip(btn, filterType, value) {
+            const isActive = btn.classList.contains('active');
+            if (isActive) {
+                // deactivate: restore all checkboxes for this filterType
+                btn.classList.remove('active');
+                const checkboxes = document.querySelectorAll(`#${filterType}FilterContent input[type="checkbox"]`);
+                checkboxFilters[filterType].clear();
+                checkboxes.forEach(cb => { cb.checked = true; checkboxFilters[filterType].add(cb.value); });
+            } else {
+                // activate: check only this value
+                document.querySelectorAll(`.cat-chip[data-${filterType}]`).forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                const checkboxes = document.querySelectorAll(`#${filterType}FilterContent input[type="checkbox"]`);
+                checkboxFilters[filterType].clear();
+                checkboxes.forEach(cb => {
+                    const match = cb.value.toLowerCase().includes(value.toLowerCase());
+                    cb.checked = match;
+                    if (match) checkboxFilters[filterType].add(cb.value);
+                });
+            }
+            updateCheckboxFilterCount(filterType);
+            const toggleBtn = document.querySelector(`#${filterType}FilterContainer .checkbox-filter-toggle`);
+            if (toggleBtn) {
+                const checkboxes = document.querySelectorAll(`#${filterType}FilterContent input[type="checkbox"]`);
+                const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+                toggleBtn.textContent = allChecked ? 'Clear All' : 'Select All';
+            }
+            smartDebouncer.debounceImmediate('checkbox-filter', applyFilters, 150);
         }
 
         function updateCheckboxFilterCount(filterType) {
