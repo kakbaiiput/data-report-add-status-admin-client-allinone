@@ -1200,6 +1200,78 @@
             justify-content: center;
         }
 
+        /* Category Quick Filter Buttons */
+        .category-quick-filters {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 12px;
+            padding: 10px 12px;
+            background: var(--bg-stats);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .category-quick-filters-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .category-quick-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .category-quick-row-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: 600;
+            min-width: 42px;
+        }
+
+        .cat-quick-btn {
+            padding: 4px 12px;
+            border: 1.5px solid var(--border-color);
+            background: var(--bg-container);
+            border-radius: 14px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .cat-quick-btn:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+            background: rgba(59, 130, 246, 0.08);
+        }
+
+        .cat-quick-btn.active {
+            border-color: var(--accent-blue);
+            background: var(--accent-blue);
+            color: var(--text-white);
+        }
+
+        .cat-quick-btn.active-status {
+            border-color: var(--accent-green);
+            background: var(--accent-green);
+            color: var(--text-white);
+        }
+
+        .cat-quick-btn.active-paket {
+            border-color: #8b5cf6;
+            background: #8b5cf6;
+            color: var(--text-white);
+        }
+
         .filter-btn {
             padding: 6px 14px;
             border: 2px solid var(--border-color);
@@ -2796,6 +2868,24 @@
                         <span class="collapse-icon">▼</span>
                     </div>
                     <div class="filter-card-content">
+                        <!-- Quick Filter Buttons untuk Status & Paket -->
+                        <div class="category-quick-filters">
+                            <div class="category-quick-filters-label">⚡ Quick Select</div>
+                            <div class="category-quick-row">
+                                <span class="category-quick-row-label">Status:</span>
+                                <button class="cat-quick-btn" data-type="status" data-value="Ready" onclick="toggleCategoryQuickFilter(this)">Ready</button>
+                                <button class="cat-quick-btn" data-type="status" data-value="Confirmed" onclick="toggleCategoryQuickFilter(this)">Confirmed</button>
+                                <button class="cat-quick-btn" data-type="status" data-value="Segera" onclick="toggleCategoryQuickFilter(this)">Segera</button>
+                                <button class="cat-quick-btn" data-type="status" data-value="Paid" onclick="toggleCategoryQuickFilter(this)">Paid</button>
+                            </div>
+                            <div class="category-quick-row">
+                                <span class="category-quick-row-label">Paket:</span>
+                                <button class="cat-quick-btn" data-type="paket" data-value="Regular" onclick="toggleCategoryQuickFilter(this)">Regular</button>
+                                <button class="cat-quick-btn" data-type="paket" data-value="Lite" onclick="toggleCategoryQuickFilter(this)">Lite</button>
+                                <button class="cat-quick-btn" data-type="paket" data-value="Roam" onclick="toggleCategoryQuickFilter(this)">Roam</button>
+                                <button class="cat-quick-btn" data-type="paket" data-value="International" onclick="toggleCategoryQuickFilter(this)">International</button>
+                            </div>
+                        </div>
                         <div class="filter-grid">
                             <div class="filter-input-group">
                                 <label class="filter-label">Status</label>
@@ -4370,14 +4460,17 @@
                         checkboxFilters[filterType].delete(option);
                     }
                     updateCheckboxFilterCount(filterType);
-                    
+
                     const checkboxes = document.querySelectorAll(`#${filterType}FilterContent input[type="checkbox"]`);
                     const allChecked = Array.from(checkboxes).every(cb => cb.checked);
                     const toggleBtn = document.querySelector(`#${filterType}FilterContainer .checkbox-filter-toggle`);
                     if (toggleBtn) {
                         toggleBtn.textContent = allChecked ? 'Clear All' : 'Select All';
                     }
-                    
+
+                    // Sync category quick filter buttons with checkbox state
+                    syncCategoryQuickButtons(filterType, checkboxes);
+
                     // Use smart debouncing for filter application
                     smartDebouncer.debounceImmediate('checkbox-filter', applyFilters, 150);
                 });
@@ -4511,6 +4604,62 @@
             applyFilters();
         }
 
+        function toggleCategoryQuickFilter(btn) {
+            const type = btn.dataset.type;   // 'status' or 'paket'
+            const value = btn.dataset.value;
+            const activeClass = type === 'status' ? 'active-status' : 'active-paket';
+
+            const isActive = btn.classList.contains(activeClass);
+
+            if (isActive) {
+                // Deactivate: add value back to checkbox filter (show all)
+                btn.classList.remove(activeClass);
+                // Re-enable the checkbox for this value
+                const cb = document.querySelector(`#${type}FilterContent input[value="${value}"]`);
+                if (cb) {
+                    cb.checked = true;
+                    checkboxFilters[type].add(value);
+                    updateCheckboxFilterCount(type);
+                }
+            } else {
+                // Activate: set checkbox filter to show ONLY this value
+                // First deactivate all other quick buttons of same type
+                document.querySelectorAll(`.cat-quick-btn[data-type="${type}"]`).forEach(b => b.classList.remove(activeClass));
+
+                btn.classList.add(activeClass);
+
+                // Uncheck all checkboxes for this type, then check only this value
+                const allCbs = document.querySelectorAll(`#${type}FilterContent input[type="checkbox"]`);
+                checkboxFilters[type].clear();
+                allCbs.forEach(cb => {
+                    if (cb.value === value) {
+                        cb.checked = true;
+                        checkboxFilters[type].add(cb.value);
+                    } else {
+                        cb.checked = false;
+                    }
+                });
+                updateCheckboxFilterCount(type);
+            }
+
+            applyFilters();
+        }
+
+        function syncCategoryQuickButtons(filterType, checkboxes) {
+            const activeClass = filterType === 'status' ? 'active-status' : 'active-paket';
+            const checkedValues = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+
+            document.querySelectorAll(`.cat-quick-btn[data-type="${filterType}"]`).forEach(btn => {
+                const val = btn.dataset.value;
+                // Active only if exactly this one value is selected
+                if (checkedValues.length === 1 && checkedValues[0] === val) {
+                    btn.classList.add(activeClass);
+                } else {
+                    btn.classList.remove(activeClass);
+                }
+            });
+        }
+
         function updateQuickFilterIndicator(quickFilter) {
             const indicator = document.getElementById('activeFilterIndicator');
             const filterText = document.getElementById('activeFilterText');
@@ -4570,6 +4719,9 @@
             currentQuickFilter = 'all';
             document.querySelectorAll('.filter-chip').forEach(btn => btn.classList.remove('active'));
             document.querySelector('.filter-chip[data-filter="all"]').classList.add('active');
+
+            // Reset category quick filter buttons
+            document.querySelectorAll('.cat-quick-btn').forEach(btn => btn.classList.remove('active-status', 'active-paket'));
 
             document.getElementById('activeFilterIndicator').style.display = 'none';
 
